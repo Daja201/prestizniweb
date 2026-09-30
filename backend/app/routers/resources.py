@@ -10,7 +10,8 @@ from zipfile import BadZipFile, ZipFile
 
 from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
-from sqlalchemy import and_, desc, func, or_, select, update
+from sqlalchemy import and_, delete, desc, func, or_, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.config import settings
@@ -647,14 +648,12 @@ def vote_resource(
     resource = db.scalar(select(Resource).where(Resource.id == resource_id, Resource.status == "visible"))
     if resource is None:
         return render(request, "errors/404.html", status_code=404)
-    existing = db.scalar(
-        select(ResourceVote).where(
-            ResourceVote.resource_id == resource.id,
-            ResourceVote.user_id == user.id,
-        )
+    removed_id = db.scalar(
+        delete(ResourceVote)
+        .where(ResourceVote.resource_id == resource.id, ResourceVote.user_id == user.id)
+        .returning(ResourceVote.resource_id)
     )
-    if existing:
-        db.delete(existing)
+    if removed_id is not None:
         db.execute(
             update(Resource)
             .where(Resource.id == resource.id)
@@ -662,12 +661,18 @@ def vote_resource(
         )
         voted = False
     else:
-        db.add(ResourceVote(resource_id=resource.id, user_id=user.id))
-        db.execute(
-            update(Resource)
-            .where(Resource.id == resource.id)
-            .values(upvotes_count=Resource.upvotes_count + 1)
+        inserted_id = db.scalar(
+            pg_insert(ResourceVote)
+            .values(resource_id=resource.id, user_id=user.id)
+            .on_conflict_do_nothing(index_elements=[ResourceVote.resource_id, ResourceVote.user_id])
+            .returning(ResourceVote.resource_id)
         )
+        if inserted_id is not None:
+            db.execute(
+                update(Resource)
+                .where(Resource.id == resource.id)
+                .values(upvotes_count=Resource.upvotes_count + 1)
+            )
         voted = True
     db.commit()
     db.refresh(resource)

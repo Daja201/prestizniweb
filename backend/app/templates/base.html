@@ -18,6 +18,8 @@
     {% block content %}{% endblock %}
   </main>
   {% if request.url.path != "/login" %}{% include "components/footer.html" %}{% endif %}
+  {% include "components/rules_modal.html" %}
+  {% include "components/cookie_notice.html" %}
   {% block scripts %}{% endblock %}
 </body>
 </html>

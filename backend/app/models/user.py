@@ -20,6 +20,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(CITEXT, unique=True, nullable=False)
     display_name: Mapped[str] = mapped_column(String(60), nullable=False)
     avatar: Mapped[str] = mapped_column(String(12), nullable=False, default="circle", server_default="circle")
+    avatar_path: Mapped[str | None] = mapped_column(String(255), default=None)
     role: Mapped[str] = mapped_column(String(12), nullable=False, default="student")
     status: Mapped[str] = mapped_column(String(10), nullable=False, default="active")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

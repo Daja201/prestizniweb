@@ -22,6 +22,49 @@ class ProcessedImage:
     height: int
 
 
+_AVATAR_SIZE = 256
+
+
+def process_avatar_image(data: bytes) -> bytes:
+    """Validate, strip metadata from, and square-crop a profile picture to a small WebP."""
+    if not data:
+        raise ValueError("Obrázek je prázdný.")
+    if len(data) > settings.max_image_mb * 1024 * 1024:
+        raise ValueError(f"Obrázek může mít nejvýše {settings.max_image_mb} MB.")
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(io.BytesIO(data)) as probe:
+                if probe.format not in _ALLOWED_FORMATS:
+                    raise ValueError("Povolené jsou pouze obrázky JPEG, PNG, WebP nebo GIF.")
+                probe.verify()
+            with Image.open(io.BytesIO(data)) as source:
+                if source.format not in _ALLOWED_FORMATS:
+                    raise ValueError("Povolené jsou pouze obrázky JPEG, PNG, WebP nebo GIF.")
+                source.seek(0)
+                image = ImageOps.exif_transpose(source.copy())
+                image = image.convert("RGB")
+                image.info.clear()
+
+                # Center-crop to a square before downscaling to a small fixed icon size.
+                width, height = image.size
+                side = min(width, height)
+                left = (width - side) // 2
+                top = (height - side) // 2
+                image = image.crop((left, top, left + side, top + side))
+                image = image.resize((_AVATAR_SIZE, _AVATAR_SIZE), Image.Resampling.LANCZOS)
+                image.info.clear()
+
+                buffer = io.BytesIO()
+                image.save(buffer, format="WEBP", quality=82, method=4)
+                return buffer.getvalue()
+    except ValueError:
+        raise
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
+        raise ValueError("Soubor není platný nebo bezpečný obrázek.") from exc
+
+
 def process_image(data: bytes) -> ProcessedImage:
     if not data:
         raise ValueError("Obrázek je prázdný.")

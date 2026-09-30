@@ -34,8 +34,27 @@ def _author(db: Session, target_type: str, target_id: int):
     return db.get(User, author_id) if author_id else (target if target_type == "user" else None)
 
 
-def _action_status(action: str) -> str | None:
-    return {"hide": "hidden", "restore": "visible", "delete": "deleted"}.get(action)
+def _action_status(target_type: str, action: str) -> str | None:
+    """Map a generic moderation action to the status valid for this target type."""
+    generic = {"hide": "hidden", "restore": "visible", "delete": "deleted"}.get(action)
+    if generic is None:
+        return None
+    valid = moderation.TARGETS.get(target_type, (None, set()))[1]
+    if generic in valid:
+        return generic
+    # Per-type aliases for statuses that don't exist on every model.
+    if target_type == "class":
+        if action == "restore":
+            return "active"
+        if action == "delete":
+            # Classes have no "deleted" status; deleting via report means hiding it.
+            return "hidden"
+    if target_type == "user":
+        if action == "hide":
+            return "banned"
+        if action == "restore":
+            return "active"
+    return None
 
 
 @router.get("", response_class=HTMLResponse)
@@ -98,11 +117,12 @@ def resolve_report(
                     item.status = "hidden"
         audit.log(db, actor.id, "ban_author", target_type, target_id, {"hide_content": bool(ban_content)})
     else:
-        status = _action_status(action)
+        status = _action_status(target_type, action)
         if status:
-            if target_type == "class" and status == "visible":
-                status = "active"
-            moderation.set_status(db, target_type, target_id, status, actor.id, action)
+            try:
+                moderation.set_status(db, target_type, target_id, status, actor.id, action)
+            except (ValueError, LookupError) as exc:
+                return HTMLResponse(str(exc) or "Tuto akci nelze pro tento typ obsahu provést.", status_code=400)
         audit.log(db, actor.id, f"report_{action}", target_type, target_id)
 
     for report in reports_for:

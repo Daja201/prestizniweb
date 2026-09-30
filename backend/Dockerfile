@@ -18,7 +18,9 @@ RUN mkdir -p app/static/vendor \
     && python -c "from urllib.request import urlretrieve; urlretrieve('https://unpkg.com/htmx.org@1.9.12/dist/htmx.min.js', 'app/static/vendor/htmx.min.js')" \
     && chmod 755 ./entrypoint.sh \
     && useradd --create-home --uid 10001 appuser \
-    && chown -R appuser:appuser /app
+    && chown -R appuser:appuser /app \
+    && mkdir -p /data/uploads \
+    && chown -R appuser:appuser /data/uploads
 
 USER appuser
 EXPOSE 8000

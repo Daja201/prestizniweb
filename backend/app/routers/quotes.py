@@ -6,7 +6,8 @@ from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, Form, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import and_, desc, func, or_, select, update
+from sqlalchemy import and_, delete, desc, func, or_, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.config import settings
@@ -255,14 +256,12 @@ def vote_quote(
     if quote is None:
         return render(request, "errors/404.html", status_code=404)
 
-    existing = db.scalar(
-        select(QuoteVote).where(
-            QuoteVote.quote_id == quote.id,
-            QuoteVote.user_id == user.id,
-        )
+    removed_id = db.scalar(
+        delete(QuoteVote)
+        .where(QuoteVote.quote_id == quote.id, QuoteVote.user_id == user.id)
+        .returning(QuoteVote.quote_id)
     )
-    if existing:
-        db.delete(existing)
+    if removed_id is not None:
         db.execute(
             update(Quote)
             .where(Quote.id == quote.id)
@@ -270,12 +269,18 @@ def vote_quote(
         )
         voted = False
     else:
-        db.add(QuoteVote(quote_id=quote.id, user_id=user.id))
-        db.execute(
-            update(Quote)
-            .where(Quote.id == quote.id)
-            .values(votes_count=Quote.votes_count + 1)
+        inserted_id = db.scalar(
+            pg_insert(QuoteVote)
+            .values(quote_id=quote.id, user_id=user.id)
+            .on_conflict_do_nothing(index_elements=[QuoteVote.quote_id, QuoteVote.user_id])
+            .returning(QuoteVote.quote_id)
         )
+        if inserted_id is not None:
+            db.execute(
+                update(Quote)
+                .where(Quote.id == quote.id)
+                .values(votes_count=Quote.votes_count + 1)
+            )
         voted = True
     db.commit()
     db.refresh(quote)

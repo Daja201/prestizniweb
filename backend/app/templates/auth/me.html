@@ -7,13 +7,30 @@
 
   <div class="card stack">
     <div><strong>{{ user.email }}</strong><div class="muted">{{ user.role }}</div></div>
-    <form class="stack" method="post" action="/me">
+    <form class="stack" method="post" action="/me" enctype="multipart/form-data">
       <div class="form-field">
         <label for="display_name">Display name</label>
         <input class="input" type="text" id="display_name" name="display_name" value="{{ user.display_name | e }}" minlength="2" maxlength="60" required>
       </div>
+
       <div class="form-field">
-        <label>Profile icon</label>
+        <label>Profile picture</label>
+        <div class="avatar-photo-row">
+          {% if user.avatar_path %}
+            <img class="avatar avatar-photo" src="{{ media_url(user.avatar_path) }}" alt="" width="48" height="48">
+          {% else %}
+            <span class="avatar avatar-{{ user.avatar or 'circle' }}" aria-hidden="true">{% if user.avatar not in ['dot', 'triangle'] %}{{ user.display_name[:1]|upper }}{% endif %}</span>
+          {% endif %}
+          <input class="input" type="file" name="avatar_file" accept="image/png,image/jpeg,image/webp,image/gif">
+        </div>
+        <p class="muted">JPEG, PNG, WebP or GIF, up to {{ settings.max_image_mb }} MB. Cropped to a square.</p>
+        {% if user.avatar_path %}
+        <label class="form-field-inline"><input type="checkbox" name="remove_avatar_photo" value="1"> Remove uploaded photo</label>
+        {% endif %}
+      </div>
+
+      <div class="form-field">
+        <label>Fallback icon (used when no photo is uploaded)</label>
         <div class="avatar-picker">
           {% for option in ['circle', 'square', 'triangle', 'dot'] %}
           <div class="avatar-option">
@@ -23,6 +40,7 @@
           {% endfor %}
         </div>
       </div>
+
       <button class="btn btn-primary" type="submit">SAVE</button>
     </form>
   </div>

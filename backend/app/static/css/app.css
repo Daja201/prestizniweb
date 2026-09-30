@@ -64,6 +64,10 @@ img { max-width: 100%; }
 .avatar-square { border-radius: 2px; }
 .avatar-triangle { border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 .avatar-dot::after { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; content: ""; }
+.avatar-photo { object-fit: cover; border: 1px solid var(--border); }
+.avatar-photo-row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.avatar-photo-row .input { width: auto; flex: 1 1 14rem; }
+.form-field-inline { display: flex; align-items: center; gap: .4rem; font-size: .85rem; }
 .site-footer { margin-top: 4rem; padding: 1.25rem 0; border-top: 1px solid var(--border); font-size: .75rem; }
 .site-footer .row { flex-wrap: wrap; }
 .site-footer nav { display: flex; flex-wrap: wrap; gap: 1rem; }
@@ -96,6 +100,16 @@ img { max-width: 100%; }
 .avatar-option input { position: absolute; opacity: 0; pointer-events: none; }
 .avatar-option label { display: grid; width: 3rem; height: 3rem; place-items: center; border: 1px solid var(--border); cursor: pointer; }
 .avatar-option input:checked + label { border: 2px solid var(--accent); }
+
+.rules-overlay { position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center; padding: 1rem; background: rgba(0, 0, 0, .7); }
+.rules-overlay.is-visible { display: flex; }
+.rules-modal { width: min(100%, 30rem); max-height: 85vh; overflow-y: auto; padding: 1.25rem; border: 1px solid var(--border); background: var(--bg); color: var(--fg); }
+.rules-modal h2 { margin: 0 0 .5rem; }
+.rules-modal p { margin: 0 0 .75rem; }
+.rules-modal .btn { margin-top: .5rem; width: 100%; }
+.cookie-banner { position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; display: none; gap: .75rem; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: .85rem 1rem; border-top: 1px solid var(--border); background: var(--bg); color: var(--fg); }
+.cookie-banner.is-visible { display: flex; }
+.cookie-banner p { margin: 0; font-size: .85rem; max-width: 46rem; }
 
 @media (max-width: 900px) {
   .nav-inner { align-items: flex-start; flex-wrap: wrap; padding-block: .6rem; }

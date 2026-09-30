@@ -10,7 +10,7 @@
     <button class="btn btn-primary" type="submit">FILTER</button>
     {% if tag or class_slug %}<a class="btn btn-ghost" href="/memes">RESET</a>{% endif %}
   </form>
-  <div id="meme-grid" class="meme-grid" data-masonry>
+  <div id="meme-grid" class="meme-grid">
     {% include "memes/_items.html" %}
   </div>
   <div class="row meme-pager" data-meme-pager>

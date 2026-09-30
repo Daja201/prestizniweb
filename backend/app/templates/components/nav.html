@@ -9,7 +9,11 @@
       <a class="btn btn-ghost" href="/classes">CLASS WEBS</a>
       {% if user.role == 'admin' %}<a class="btn btn-ghost" href="/admin">ADMIN</a>{% endif %}
       <a class="btn btn-ghost nav-user" href="/me" aria-label="Settings">
+        {% if user.avatar_path %}
+        <img class="avatar avatar-photo" src="{{ media_url(user.avatar_path) }}" alt="" width="28" height="28">
+        {% else %}
         <span class="avatar avatar-{{ user.avatar or 'circle' }}" aria-hidden="true">{% if user.avatar not in ['dot', 'triangle'] %}{{ user.display_name[:1]|upper }}{% endif %}</span>
+        {% endif %}
       </a>
       <form method="post" action="/logout"><button class="btn btn-ghost" type="submit">LOGOUT</button></form>
       <button class="btn btn-ghost" type="button" data-theme-toggle>BLACK</button>

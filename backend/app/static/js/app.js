@@ -49,4 +49,40 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!details.contains(event.target)) details.open = false;
     });
   });
+
+  // ── cookie helpers ─────────────────────────────────────────────────────
+  const ACK_MAX_AGE = 60 * 60 * 24 * 180; // 180 days
+  const getCookie = (name) => {
+    const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+    return match ? decodeURIComponent(match[1]) : null;
+  };
+  const setCookie = (name, value) => {
+    document.cookie = `${name}=${encodeURIComponent(value)}; max-age=${ACK_MAX_AGE}; path=/; samesite=lax`;
+  };
+
+  // ── rules / no-responsibility acknowledgment, remembered via cookie ─────
+  const rulesOverlay = document.querySelector("[data-rules-overlay]");
+  const rulesOkBtn = document.querySelector("[data-rules-ok]");
+  if (rulesOverlay && rulesOkBtn) {
+    if (getCookie("rules_ack") !== "1") {
+      rulesOverlay.classList.add("is-visible");
+    }
+    rulesOkBtn.addEventListener("click", () => {
+      setCookie("rules_ack", "1");
+      rulesOverlay.classList.remove("is-visible");
+    });
+  }
+
+  // ── cookie usage notice ──────────────────────────────────────────────────
+  const cookieBanner = document.querySelector("[data-cookie-banner]");
+  const cookieOkBtn = document.querySelector("[data-cookie-ok]");
+  if (cookieBanner && cookieOkBtn) {
+    if (getCookie("cookie_ack") !== "1") {
+      cookieBanner.classList.add("is-visible");
+    }
+    cookieOkBtn.addEventListener("click", () => {
+      setCookie("cookie_ack", "1");
+      cookieBanner.classList.remove("is-visible");
+    });
+  }
 });

@@ -75,6 +75,20 @@ def _safe_next(next_param: str | None) -> str:
     return "/"
 
 
+def _read_upload_sync(upload) -> bytes:
+    """Read an UploadFile's bytes from sync code (mirrors the form-parsing pattern above)."""
+    import asyncio
+
+    async def _get_bytes():
+        return await upload.read()
+
+    loop = asyncio.new_event_loop()
+    try:
+        return loop.run_until_complete(_get_bytes())
+    finally:
+        loop.close()
+
+
 def _display_name_from_email(local: str) -> str:
     """'jan.novak' -> 'Jan Novak'"""
     return " ".join(part.capitalize() for part in local.replace(".", " ").replace("_", " ").split())
@@ -436,6 +450,8 @@ def me_post(request: Request, db: Session = Depends(get_db), user: User = Depend
 
     display_name = str(form.get("display_name", "")).strip()
     avatar = str(form.get("avatar", "circle")).strip().lower()
+    remove_photo = str(form.get("remove_avatar_photo", "")).strip() == "1"
+    upload = form.get("avatar_file")
 
     # Validate: 2-60 chars, no control characters
     if not (2 <= len(display_name) <= 60):
@@ -446,8 +462,28 @@ def me_post(request: Request, db: Session = Depends(get_db), user: User = Depend
     if avatar not in {"circle", "square", "triangle", "dot"}:
         return render(request, "auth/me.html", error="Neplatný profilový symbol.")
 
+    from app.core.storage import save_bytes, delete as storage_delete
+    from app.services.images import process_avatar_image
+
+    new_avatar_path = None
+    if upload is not None and getattr(upload, "filename", ""):
+        raw = _read_upload_sync(upload)
+        if raw:
+            try:
+                processed = process_avatar_image(raw)
+            except ValueError as exc:
+                return render(request, "auth/me.html", error=str(exc))
+            new_avatar_path = save_bytes("avatars", processed, "webp")
+
     user.display_name = display_name
     user.avatar = avatar
+    if new_avatar_path:
+        old_path = user.avatar_path
+        user.avatar_path = new_avatar_path
+        storage_delete(old_path)
+    elif remove_photo and user.avatar_path:
+        storage_delete(user.avatar_path)
+        user.avatar_path = None
     db.commit()
     response = RedirectResponse("/me", status_code=303)
     flash(response, "Settings saved.", "success")
@@ -471,10 +507,37 @@ def me_delete(request: Request, db: Session = Depends(get_db), user: User = Depe
     if confirm != "SMAZAT":
         return render(request, "auth/me.html", error="Pro smazání účtu napiš SMAZAT.")
 
-    from app.models import Meme, Quote, Resource, ClassMember, MemeLike, QuoteVote, ResourceVote
+    from app.models import Meme, Quote, Resource, ClassMember, MemeLike, QuoteVote, ResourceVote, SchoolClass
     from app.core.storage import delete as storage_delete
 
     now = datetime.now(timezone.utc)
+
+    # Remove the uploaded profile photo, if any.
+    if user.avatar_path:
+        storage_delete(user.avatar_path)
+        user.avatar_path = None
+
+    # Hand off ownership of any class profiles this user created, so they
+    # don't become permanently unmanageable once this account is anonymised.
+    owned_classes = db.query(SchoolClass).filter(SchoolClass.created_by == user.id).all()
+    for school_class in owned_classes:
+        successor = (
+            db.query(ClassMember)
+            .filter(
+                ClassMember.class_id == school_class.id,
+                ClassMember.user_id != user.id,
+                ClassMember.status == "approved",
+            )
+            .order_by(ClassMember.created_at.asc())
+            .first()
+        )
+        if successor:
+            successor.role = "owner"
+            school_class.created_by = successor.user_id
+        else:
+            # No one left to hand it to; hide it rather than leave an
+            # ownerless, uneditable-by-anyone-but-a-moderator profile.
+            school_class.status = "hidden"
 
     # Anonymise memes
     memes = db.query(Meme).filter(Meme.author_id == user.id, Meme.status != "deleted").all()
