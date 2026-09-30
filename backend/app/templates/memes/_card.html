@@ -1,0 +1,14 @@
+<!-- Reusable meme card macro. -->
+{% from "components/report_button.html" import report_button %}
+{% from "memes/_like_button.html" import like_button %}
+{% macro meme_card(meme, user, liked=false) %}
+<article class="card meme-card {% if meme.status == 'hidden' %}meme-hidden{% endif %}" data-width="{{ meme.width }}" data-height="{{ meme.height }}">
+  {% if meme.status == 'hidden' %}<span class="badge badge-warn">Skryto</span>{% endif %}
+  <a class="meme-image-link" href="/memes/{{ meme.id }}" aria-label="Otevřít meme">
+    <img class="meme-image" src="{{ media_url(meme.thumb_path) }}" alt="{{ meme.caption or 'Meme' }}" width="{{ meme.width }}" height="{{ meme.height }}" loading="lazy" decoding="async">
+  </a>
+  {% if meme.caption %}<p class="meme-caption">{{ meme.caption }}</p>{% endif %}
+  <div class="meme-card-footer"><span class="muted">{{ meme.author.display_name }}</span>{{ like_button(meme, user, liked) }}</div>
+  {{ report_button('meme', meme.id) }}
+</article>
+{% endmacro %}

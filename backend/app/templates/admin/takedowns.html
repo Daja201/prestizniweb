@@ -1,0 +1,4 @@
+<!-- Takedown request administration. -->
+{% extends "base.html" %}
+{% block title %}Takedown požadavky{% endblock %}
+{% block content %}<div class="container stack"><h1>Takedown požadavky</h1>{% for item in takedowns %}<article class="card stack"><strong>{{ item.name }}</strong><span>{{ item.contact }}</span><a href="{{ item.target_url }}">{{ item.target_url }}</a><p>{{ item.message }}</p><span class="badge">{{ item.status }}</span>{% if item.status == 'open' %}<form method="post" action="/admin/takedowns/{{ item.id }}/done"><button class="btn btn-primary">Označit jako vyřízené</button></form>{% endif %}</article>{% else %}<div class="empty-state">Žádné požadavky.</div>{% endfor %}</div>{% endblock %}

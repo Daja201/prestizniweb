@@ -1,0 +1,27 @@
+{# Renders one quote card with voting and reporting controls. #}
+{% from "components/report_button.html" import report_button %}
+<article class="card quote-card" id="quote-{{ quote.id }}">
+  <div class="quote-mark" aria-hidden="true">„</div>
+  <blockquote class="quote-text">{{ quote.text }}</blockquote>
+  <p class="quote-said-by">— {{ quote.said_by }}</p>
+  {% if quote.context %}<p class="muted quote-context">{{ quote.context }}</p>{% endif %}
+  <div class="row quote-meta">
+    {% if quote.said_on %}<time datetime="{{ quote.said_on.isoformat() }}">{{ quote.said_on.strftime('%d. %m. %Y') }}</time>{% endif %}
+    <span class="muted">Přidal/a {{ quote.author.display_name }}</span>
+  </div>
+  {% if quote.status == "pending" and quote.author_id == user.id %}
+    <span class="badge badge-warn">čeká na schválení</span>
+  {% elif quote.status == "hidden" %}
+    <span class="badge badge-warn">skryto</span>
+  {% endif %}
+  <div class="row quote-actions">
+    {% set voted = quote.id in voted_ids %}
+    {% include "quotes/_vote_button.html" %}
+    {{ report_button("quote", quote.id) }}
+    {% if quote.author_id == user.id %}
+      <form method="post" action="/quotes/{{ quote.id }}/delete" class="row">
+        <button class="btn btn-ghost" type="submit">Odstranit</button>
+      </form>
+    {% endif %}
+  </div>
+</article>

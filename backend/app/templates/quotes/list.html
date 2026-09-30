@@ -1,0 +1,35 @@
+{# Provides the searchable, filterable quote feed. #}
+{% extends "base.html" %}
+{% block title %}Citáty{% endblock %}
+{% block content %}
+<div class="container stack quotes-page">
+  <div class="row page-header">
+    <div>
+      <h1>Citáty</h1>
+      <p class="muted">Vtipné výroky studentů a učitelů.</p>
+    </div>
+    <a class="btn btn-primary" href="/quotes/new">Přidat citát</a>
+  </div>
+
+  <form class="card row quote-filters" method="get" action="/quotes">
+    <div class="form-field">
+      <label for="quote-q">Hledat</label>
+      <input class="input" id="quote-q" name="q" value="{{ q }}" placeholder="Text nebo kdo to řekl">
+    </div>
+    <div class="form-field">
+      <label for="quote-class">Třída</label>
+      <select class="select" id="quote-class" name="class">
+        <option value="">Všechny třídy</option>
+        {% for item in classes %}
+          <option value="{{ item.slug }}"{% if class_slug == item.slug %} selected{% endif %}>{{ item.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="btn btn-primary" type="submit">Hledat</button>
+  </form>
+
+  <div id="quote-items" class="stack">
+    {% include "quotes/_items.html" %}
+  </div>
+</div>
+{% endblock %}

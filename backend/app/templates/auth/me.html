@@ -1,0 +1,78 @@
+{# Profilová stránka přihlášeného uživatele #}
+{% extends "base.html" %}
+{% block title %}Můj profil{% endblock %}
+
+{% block content %}
+<div class="container stack profile-page">
+  <h1>Můj profil</h1>
+
+  {% if error %}
+    <div class="flash flash-error" role="alert">{{ error }}</div>
+  {% endif %}
+
+  <div class="card stack">
+    <h2>Základní informace</h2>
+    <p><span class="muted">E-mail:</span> {{ user.email }}</p>
+    <p><span class="muted">Role:</span>
+      <span class="pill">{{ user.role }}</span>
+    </p>
+    <p><span class="muted">Účet vytvořen:</span> {{ user.created_at | cs_date }}</p>
+    {% if user.last_login_at %}
+      <p><span class="muted">Poslední přihlášení:</span> {{ user.last_login_at | cs_datetime }}</p>
+    {% endif %}
+  </div>
+
+  <div class="card stack">
+    <h2>Změnit zobrazované jméno</h2>
+    <form method="post" action="/me">
+      <div class="form-field">
+        <label for="display_name">Zobrazované jméno</label>
+        <input
+          class="input"
+          type="text"
+          id="display_name"
+          name="display_name"
+          value="{{ user.display_name | e }}"
+          minlength="2"
+          maxlength="60"
+          required
+        >
+        <span class="form-error">2–60 znaků, bez řídicích znaků.</span>
+      </div>
+      <button class="btn btn-primary" type="submit">Uložit</button>
+    </form>
+  </div>
+
+  {% if memberships %}
+  <div class="card stack">
+    <h2>Moje třídy</h2>
+    <ul class="stack">
+      {% for member, cls in memberships %}
+        <li>
+          <a href="/c/{{ cls.slug }}">{{ cls.name }}</a>
+          <span class="badge {% if member.status == 'pending' %}badge-warn{% endif %}">
+            {{ member.status }}
+          </span>
+          <span class="muted">({{ member.role }})</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <div class="card stack">
+    <h2>Nebezpečná zóna</h2>
+    <p class="muted">Smazání účtu je nevratné. Veškerý tvůj obsah bude anonymizován.</p>
+    <details>
+      <summary class="btn btn-danger">Smazat účet</summary>
+      <form method="post" action="/me/delete" class="stack delete-confirm">
+        <div class="form-field">
+          <label for="confirm">Pro potvrzení napiš <strong>SMAZAT</strong></label>
+          <input class="input" type="text" id="confirm" name="confirm" required placeholder="SMAZAT">
+        </div>
+        <button class="btn btn-danger" type="submit">Nenávratně smazat účet</button>
+      </form>
+    </details>
+  </div>
+</div>
+{% endblock %}

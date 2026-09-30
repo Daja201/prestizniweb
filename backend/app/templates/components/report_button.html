@@ -1,0 +1,24 @@
+<!-- Report control usable without JavaScript, with an HTMX enhancement. -->
+{% macro report_button(target_type, target_id) %}
+<details class="report">
+  <summary class="btn btn-ghost">Nahlásit</summary>
+  <form class="stack" method="post" action="/reports" hx-post="/reports" hx-target="closest details" hx-swap="outerHTML">
+    <input type="hidden" name="target_type" value="{{ target_type }}">
+    <input type="hidden" name="target_id" value="{{ target_id }}">
+    <label class="form-field">Důvod
+      <select class="select" name="reason" required>
+        <option value="spam">Spam</option>
+        <option value="harassment">Obtěžování</option>
+        <option value="personal_info">Osobní údaje</option>
+        <option value="inappropriate">Nevhodný obsah</option>
+        <option value="copyright">Autorská práva</option>
+        <option value="other">Jiné</option>
+      </select>
+    </label>
+    <label class="form-field">Podrobnosti
+      <textarea class="textarea" name="details" maxlength="500" rows="3"></textarea>
+    </label>
+    <button class="btn btn-danger" type="submit">Odeslat hlášení</button>
+  </form>
+</details>
+{% endmacro %}

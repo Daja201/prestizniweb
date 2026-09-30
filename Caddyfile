@@ -1,0 +1,28 @@
+# Reverse proxy with security headers and authenticated private media.
+{$DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 30MB
+	}
+	@secure protocol https
+	header @secure Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'"
+	}
+	@static path /static/*
+	header @static Cache-Control "public, max-age=2592000"
+	handle /media/* {
+		forward_auth web:8000 {
+			uri /internal/auth-check
+		}
+		uri strip_prefix /media
+		root * /data/uploads
+		header Cache-Control "private, max-age=31536000, immutable"
+		header X-Content-Type-Options nosniff
+		file_server
+	}
+	reverse_proxy web:8000
+}

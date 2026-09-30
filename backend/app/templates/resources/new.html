@@ -1,0 +1,86 @@
+{# Provides the validated study-resource submission form. #}
+{% extends "base.html" %}
+{% block title %}Přidat studijní materiál{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="/static/css/resources.css">{% endblock %}
+{% block content %}
+<div class="container stack narrow-page">
+  <div>
+    <h1>Přidat studijní materiál</h1>
+    <p class="muted">Přidej odkaz nebo soubor. Povolené dokumenty se před uložením kontrolují podle jejich skutečného obsahu.</p>
+  </div>
+
+  <form class="card stack" method="post" action="/resources" enctype="multipart/form-data">
+    <div class="form-field">
+      <label for="resource-title">Název</label>
+      <input class="input" id="resource-title" name="title" value="{{ form.get('title', '') }}" minlength="3" maxlength="120" required>
+      {% if errors.get('title') %}<div class="form-error">{{ errors['title'] }}</div>{% endif %}
+    </div>
+    <div class="form-field">
+      <label for="resource-description">Popis <span class="muted">(volitelné)</span></label>
+      <textarea class="textarea" id="resource-description" name="description" maxlength="1000">{{ form.get('description', '') }}</textarea>
+      {% if errors.get('description') %}<div class="form-error">{{ errors['description'] }}</div>{% endif %}
+    </div>
+    <div class="grid resource-form-grid">
+      <div class="form-field">
+        <label for="resource-subject-new">Předmět</label>
+        <select class="select" id="resource-subject-new" name="subject" required>
+          <option value="">Vyber předmět</option>
+          {% for item in subjects %}<option value="{{ item }}"{% if form.get('subject') == item %} selected{% endif %}>{{ item }}</option>{% endfor %}
+        </select>
+        {% if errors.get('subject') %}<div class="form-error">{{ errors['subject'] }}</div>{% endif %}
+      </div>
+      <div class="form-field">
+        <label for="resource-year-new">Ročník <span class="muted">(volitelné)</span></label>
+        <select class="select" id="resource-year-new" name="school_year">
+          <option value="">Neuveden</option>
+          {% for item in [1, 2, 3, 4] %}<option value="{{ item }}"{% if form.get('school_year') == item|string %} selected{% endif %}>{{ item }}. ročník</option>{% endfor %}
+        </select>
+        {% if errors.get('school_year') %}<div class="form-error">{{ errors['school_year'] }}</div>{% endif %}
+      </div>
+      <div class="form-field">
+        <label for="resource-kind-new">Typ</label>
+        <select class="select" id="resource-kind-new" name="kind" required>
+          <option value="">Vyber typ</option>
+          {% for key, label in kinds.items() %}<option value="{{ key }}"{% if form.get('kind') == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+        {% if errors.get('kind') %}<div class="form-error">{{ errors['kind'] }}</div>{% endif %}
+      </div>
+    </div>
+    <div class="form-field">
+      <label for="resource-tags">Štítky <span class="muted">(max. 5, odděluj čárkou)</span></label>
+      <input class="input" id="resource-tags" name="tags" value="{{ form.get('tags', '') }}" maxlength="180" placeholder="algoritmy, maturita, tahák">
+      {% if errors.get('tags') %}<div class="form-error">{{ errors['tags'] }}</div>{% endif %}
+    </div>
+    <div class="form-field">
+      <label for="resource-class-new">Třída <span class="muted">(volitelné)</span></label>
+      <select class="select" id="resource-class-new" name="class_id">
+        <option value="">Bez přiřazení</option>
+        {% for item in classes %}<option value="{{ item.id }}"{% if form.get('class_id') == item.id|string %} selected{% endif %}>{{ item.name }}</option>{% endfor %}
+      </select>
+      {% if errors.get('class_id') %}<div class="form-error">{{ errors['class_id'] }}</div>{% endif %}
+    </div>
+
+    <fieldset class="stack source-fieldset">
+      <legend>Zdroj</legend>
+      <div class="form-field">
+        <label for="resource-url">Odkaz http/https</label>
+        <input class="input" id="resource-url" name="url" value="{{ form.get('url', '') }}" maxlength="500" type="url" placeholder="https://example.cz/material">
+        {% if errors.get('url') %}<div class="form-error">{{ errors['url'] }}</div>{% endif %}
+      </div>
+      <div class="muted source-or">— nebo —</div>
+      <div class="form-field">
+        <label for="resource-file">Soubor</label>
+        <input class="input" id="resource-file" name="file" type="file" accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.odt,.ods,.odp,.txt,.md,.png,.jpg,.webp">
+        {% if errors.get('file') %}<div class="form-error">{{ errors['file'] }}</div>{% endif %}
+        <div class="muted">PDF, Office, ODF, TXT/MD, PNG, JPG, WEBP. Nejvýše {{ settings.max_resource_mb }} MB.</div>
+      </div>
+      {% if errors.get('source') %}<div class="form-error">{{ errors['source'] }}</div>{% endif %}
+    </fieldset>
+
+    <div class="row">
+      <button class="btn btn-primary" type="submit">Přidat materiál</button>
+      <a class="btn btn-ghost" href="/resources">Zpět</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

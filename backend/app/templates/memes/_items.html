@@ -1,0 +1,8 @@
+<!-- Meme cards and the next-page sentinel. -->
+{% from "memes/_card.html" import meme_card %}
+{% if memes %}
+  {% for meme in memes %}{{ meme_card(meme, user, meme.id in voted_ids) }}{% endfor %}
+  {% if next_url %}<div class="meme-sentinel" hx-get="{{ next_url }}" hx-trigger="revealed" hx-swap="outerHTML" aria-label="Načítání dalších memes"></div>{% endif %}
+{% elif not request.headers.get('HX-Request') %}
+  <p class="empty-state">{% if tag or class_slug %}Tomuto filtru zatím nic neodpovídá.{% else %}Zatím tu žádná memes nejsou. Přidej první.{% endif %}</p>
+{% endif %}

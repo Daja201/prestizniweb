@@ -1,0 +1,27 @@
+{# Renders one study-resource catalogue card. #}
+{% from "components/report_button.html" import report_button %}
+<article class="card resource-card" id="resource-{{ resource.id }}">
+  <div class="row resource-card-header">
+    <div class="pill">{{ resource.subject }}</div>
+    <span class="badge">{{ kinds.get(resource.kind, resource.kind) }}</span>
+    {% if resource.school_year %}<span class="badge">{{ resource.school_year }}. ročník</span>{% endif %}
+    {% if resource.status == "hidden" %}<span class="badge badge-warn">skryto</span>{% endif %}
+  </div>
+  <h2 class="resource-title"><a href="/resources/{{ resource.id }}">{{ resource.title }}</a></h2>
+  {% if resource.description %}<p>{{ resource.description }}</p>{% endif %}
+  {% if resource.school_class %}<p class="muted">Třída: {{ resource.school_class.name }}</p>{% endif %}
+  <div class="row resource-tags">
+    {% for item in resource.tags %}<a class="pill" href="/resources?tag={{ item.name | urlencode }}">#{{ item.name }}</a>{% endfor %}
+  </div>
+  <div class="row resource-meta">
+    <span class="muted">{{ resource.author.display_name }}</span>
+    <span class="muted">{{ resource.created_at | cs_date }}</span>
+    <span class="muted">▲ {{ resource.upvotes_count }}</span>
+    <span class="muted">↓ {{ resource.downloads_count }}</span>
+  </div>
+  <div class="row resource-actions">
+    {% set voted = resource.id in voted_ids %}
+    {% include "resources/_vote_button.html" %}
+    {{ report_button("resource", resource.id) }}
+  </div>
+</article>

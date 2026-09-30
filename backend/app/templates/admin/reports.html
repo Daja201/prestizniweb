@@ -1,0 +1,8 @@
+<!-- Grouped open reports. -->
+{% extends "base.html" %}
+{% block title %}Hlášení{% endblock %}
+{% block content %}
+<div class="container stack"><h1>Hlášení</h1>
+{% for group in groups %}<article class="card stack"><div class="row"><strong>{{ group.target_type }} #{{ group.target_id }}</strong><span class="badge badge-warn">{{ group.count }}×</span></div><p>{{ group.target.caption if group.target and group.target.caption is defined else group.target.text if group.target and group.target.text is defined else group.target.title if group.target and group.target.title is defined else group.target.name if group.target else 'Cíl není dostupný' }}</p>{% if group.author %}<span class="muted">Autor: {{ group.author.display_name }}</span>{% endif %}<ul>{% for report in group.reports %}<li>{{ report.reason }}{% if report.details %}: {{ report.details }}{% endif %}</li>{% endfor %}</ul>
+<form method="post" action="/admin/reports/{{ group.target_type }}/{{ group.target_id }}/resolve" class="row"><button class="btn btn-danger" name="action" value="hide">Skrýt</button><button class="btn" name="action" value="restore">Obnovit</button><button class="btn btn-danger" name="action" value="delete">Smazat</button><button class="btn" name="action" value="dismiss">Zamítnout</button>{% if group.author %}<label><input type="checkbox" name="ban_content" value="1"> skrýt autorův obsah</label><button class="btn btn-danger" name="action" value="ban_author">Zablokovat autora</button>{% endif %}</form></article>{% else %}<div class="empty-state">Žádná otevřená hlášení.</div>{% endfor %}</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+/* Styles the study-resource catalogue and detail views. */
+.resource-filters {
+  gap: 1rem;
+}
+
+.resource-filter-grid,
+.resource-form-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.resource-card {
+  gap: 0.75rem;
+}
+
+.resource-card-header,
+.resource-meta,
+.resource-actions,
+.resource-detail-actions,
+.resource-tags {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.resource-title {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.resource-title a {
+  text-decoration: none;
+}
+
+.resource-tags .pill {
+  text-decoration: none;
+}
+
+.resource-actions,
+.resource-detail-actions {
+  align-items: center;
+}
+
+.resource-detail h1 {
+  margin-bottom: 0;
+}
+
+.resource-description {
+  white-space: pre-wrap;
+}
+
+.resource-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.resource-details-grid div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.resource-stats {
+  gap: 1rem;
+}
+
+.compact-field {
+  min-width: 180px;
+}
+
+.load-more {
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+
+.source-fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.source-fieldset legend {
+  padding: 0 0.4rem;
+  font-weight: 600;
+}
+
+.source-or {
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .resource-filter-grid,
+  .resource-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,8 @@
+{# Renders the HTMX study-resource upvote toggle. #}
+<form class="row" hx-post="/resources/{{ resource.id }}/vote" hx-target="#resource-vote-{{ resource.id }}" hx-swap="outerHTML">
+  <span id="resource-vote-{{ resource.id }}">
+    <button class="btn{% if voted %} btn-primary{% else %} btn-ghost{% endif %}" type="submit" aria-pressed="{{ 'true' if voted else 'false' }}">
+      {% if voted %}▲ Hlasováno{% else %}▲ Hlasovat{% endif %} · {{ resource.upvotes_count }}
+    </button>
+  </span>
+</form>

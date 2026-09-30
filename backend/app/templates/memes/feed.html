@@ -1,0 +1,19 @@
+<!-- Masonry-style meme feed and filters. -->
+{% extends "base.html" %}
+{% block title %}Memes | Spolužáci{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="/static/css/memes.css">{% endblock %}
+{% block content %}
+<section class="stack meme-feed">
+  <header class="page-heading row"><div><p class="eyebrow">Ze školních chodeb</p><h1>Memes</h1></div><a class="btn btn-primary" href="/memes/new">Přidat meme</a></header>
+  <form class="meme-filters row" method="get" action="/memes">
+    <label class="form-field"><span>Štítek</span><input class="input" type="search" name="tag" value="{{ tag }}" maxlength="30"></label>
+    <label class="form-field"><span>Třída</span><select class="select" name="class"><option value="">Všechny třídy</option>{% for school_class in classes %}<option value="{{ school_class.slug }}" {% if class_slug == school_class.slug %}selected{% endif %}>{{ school_class.name }}</option>{% endfor %}</select></label>
+    <button class="btn" type="submit">Filtrovat</button>
+    {% if tag or class_slug %}<a class="btn btn-ghost" href="/memes">Zrušit filtry</a>{% endif %}
+  </form>
+  <div id="meme-grid" class="meme-grid" data-masonry>
+    {% include "memes/_items.html" %}
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="/static/js/masonry.js" defer></script>{% endblock %}

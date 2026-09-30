@@ -1,0 +1,40 @@
+<!-- Public welcome page and signed-in dashboard. -->
+{% extends "base.html" %}
+{% block title %}{% if user %}Domů | Spolužáci{% else %}Spolužáci | SPŠE Ostrava{% endif %}{% endblock %}
+{% block content %}
+{% if not user %}
+<section class="welcome stack">
+  <p class="eyebrow">SPŠE Ostrava · studentská komunita</p>
+  <h1>Místo pro školní život.</h1>
+  <p class="welcome-copy">Memes, citáty a materiály od lidí, kteří chodí na stejnou školu.</p>
+  <a class="btn btn-primary" href="/login">Přihlásit se školním e-mailem</a>
+</section>
+{% else %}
+<section class="stack dashboard">
+  <header class="page-heading row">
+    <div><p class="eyebrow">SPŠE Ostrava</p><h1>Ahoj, {{ user.display_name }}.</h1></div>
+    <a class="btn btn-primary" href="/memes/new">Přidat meme</a>
+  </header>
+  <section class="stack" aria-labelledby="memes-heading">
+    <div class="section-heading row"><h2 id="memes-heading">Nová memes</h2><a href="/memes">Všechna memes</a></div>
+    {% if memes %}
+    <div class="grid home-memes">
+      {% for meme in memes %}
+      <a class="home-meme" href="/memes/{{ meme.id }}"><img src="{{ media_url(meme.thumb_path) }}" alt="{{ meme.caption or 'Meme' }}" width="{{ meme.width }}" height="{{ meme.height }}" loading="lazy" decoding="async"><span>{{ meme.caption }}</span></a>
+      {% endfor %}
+    </div>
+    {% else %}<p class="empty-state">Zatím tu žádná memes nejsou.</p>{% endif %}
+  </section>
+  <section class="stack" aria-labelledby="quotes-heading">
+    <div class="section-heading row"><h2 id="quotes-heading">Čerstvé citáty</h2><a href="/quotes">Všechny citáty</a></div>
+    {% if quotes %}
+    <div class="grid home-quotes">
+      {% for quote in quotes %}
+      <article class="card"><blockquote>„{{ quote.text }}“</blockquote><p class="muted">— {{ quote.said_by }}</p></article>
+      {% endfor %}
+    </div>
+    {% else %}<p class="empty-state">Zatím tu žádné citáty nejsou.</p>{% endif %}
+  </section>
+</section>
+{% endif %}
+{% endblock %}

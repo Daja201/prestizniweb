@@ -1,0 +1,23 @@
+{# Renders resource results and the HTMX load-more control. #}
+<div class="resource-result-chunk">
+  {% for resource in resources %}
+    {% include "resources/_card.html" %}
+  {% else %}
+    <div class="empty-state">Žádné materiály neodpovídají zadaným podmínkám.</div>
+  {% endfor %}
+</div>
+{% if fragment %}
+  {% if next_url %}
+    <div id="resource-load-more" class="row load-more" hx-swap-oob="outerHTML">
+      <button class="btn btn-ghost" type="button" hx-get="{{ next_url }}" hx-target="#resource-results" hx-swap="beforeend">Načíst další</button>
+    </div>
+  {% else %}
+    <div id="resource-load-more" class="visually-hidden" hx-swap-oob="outerHTML"></div>
+  {% endif %}
+{% else %}
+  {% if next_url %}
+    <div id="resource-load-more" class="row load-more">
+      <button class="btn btn-ghost" type="button" hx-get="{{ next_url }}" hx-target="#resource-results" hx-swap="beforeend">Načíst další</button>
+    </div>
+  {% endif %}
+{% endif %}

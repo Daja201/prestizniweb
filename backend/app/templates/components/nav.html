@@ -1,0 +1,14 @@
+<!-- Primary site navigation. -->
+<nav class="site-nav" aria-label="Hlavní navigace">
+  <div class="container nav-inner">
+    <a class="brand" href="/">spolužáci<span>.</span></a>
+    {% if user %}
+    <div class="nav-links">
+      <a href="/memes">Memes</a><a href="/quotes">Citáty</a><a href="/resources">Materiály</a><a href="/classes">Třídy</a>
+      {% if user.role in ['moderator', 'admin'] %}<a href="/admin">Správa</a>{% endif %}
+      <a href="/me">{{ user.display_name }}</a>
+      <form method="post" action="/logout"><button class="btn btn-ghost" type="submit">Odhlásit</button></form>
+    </div>
+    {% else %}<a class="btn btn-ghost" href="/login">Přihlásit</a>{% endif %}
+  </div>
+</nav>

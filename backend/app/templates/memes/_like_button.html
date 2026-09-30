@@ -1,0 +1,7 @@
+<!-- Like toggle form and compact counter. -->
+{% macro like_button(meme, user, liked=false) %}
+<form class="like-form" method="post" action="/memes/{{ meme.id }}/like" hx-post="/memes/{{ meme.id }}/like" hx-target="this" hx-swap="outerHTML">
+  <button class="btn btn-ghost like-button {% if liked %}is-liked{% endif %}" type="submit" aria-pressed="{{ 'true' if liked else 'false' }}" aria-label="{{ 'Odebrat lajk' if liked else 'Dát lajk' }}">♥ <span>{{ meme.likes_count }}</span></button>
+</form>
+{% endmacro %}
+{% if meme is defined %}{{ like_button(meme, user, liked) }}{% endif %}

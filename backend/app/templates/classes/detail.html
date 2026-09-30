@@ -1,0 +1,22 @@
+<!-- Class profile detail page. -->
+{% extends "base.html" %}
+{% from "memes/_card.html" import meme_card %}
+{% from "quotes/_card.html" import quote_card %}
+{% from "resources/_card.html" import resource_card %}
+{% block title %}{{ school_class.name }}{% endblock %}
+{% block content %}
+<div class="container stack">
+  <header class="card stack">
+    <div class="row"><div><h1>{{ school_class.name }}</h1><p>{{ school_class.description }}</p><span class="muted">{{ member_count }} členů</span></div>{% if school_class.status != 'active' %}<span class="badge badge-warn">{{ school_class.status }}</span>{% endif %}</div>
+    {% if is_owner %}
+    <form method="post" action="/c/{{ school_class.slug }}/edit" class="stack"><label class="form-field">Popis<textarea class="textarea" name="description" maxlength="500">{{ school_class.description }}</textarea></label><button class="btn" type="submit">Uložit popis</button></form>
+    {% endif %}
+  </header>
+
+  <section class="stack"><div class="row"><h2>Memy</h2><a href="/memes?class={{ school_class.slug }}">Zobrazit vše</a></div><div class="grid">{% for meme in memes %}{{ meme_card(meme, user) }}{% else %}<div class="empty-state">Žádné memy.</div>{% endfor %}</div></section>
+  <section class="stack"><div class="row"><h2>Citáty</h2><a href="/quotes?class={{ school_class.slug }}">Zobrazit vše</a></div><div class="grid">{% for quote in quotes %}{{ quote_card(quote, user) }}{% else %}<div class="empty-state">Žádné citáty.</div>{% endfor %}</div></section>
+  <section class="stack"><div class="row"><h2>Studijní materiály</h2><a href="/resources?class={{ school_class.slug }}">Zobrazit vše</a></div><div class="grid">{% for resource in resources %}{{ resource_card(resource, user) }}{% else %}<div class="empty-state">Žádné materiály.</div>{% endfor %}</div></section>
+
+  <section class="stack"><h2>Členové</h2><div class="grid">{% for member in members %}<div class="card">{{ member.user.display_name }}{% if member.role == 'owner' %}<span class="badge">vlastník</span>{% endif %}</div>{% endfor %}</div></section>
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+<!-- Moderator dashboard. -->
+{% extends "base.html" %}
+{% block title %}Moderace{% endblock %}
+{% block content %}
+<div class="container stack"><h1>Moderace</h1><div class="grid">
+{% for key, label in [('reports','Otevřená hlášení'),('quotes','Čekající citáty'),('classes','Čekající třídy'),('takedowns','Takedown požadavky'),('users','Uživatelé'),('banned','Zablokovaní')] %}<div class="card"><strong>{{ label }}</strong><div>{{ counters[key] }}</div></div>{% endfor %}
+</div><nav class="row"><a href="/admin/reports">Hlášení</a><a href="/admin/quotes">Citáty</a><a href="/admin/classes">Třídy</a><a href="/admin/users">Uživatelé</a><a href="/admin/audit">Audit</a><a href="/admin/takedowns">Takedown</a></nav></div>
+{% endblock %}

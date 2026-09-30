@@ -1,0 +1,43 @@
+{# Stránka po odeslání přihlašovacího e-mailu – zobrazí formulář pro zadání kódu #}
+{% extends "base.html" %}
+{% block title %}Zkontroluj e-mail{% endblock %}
+
+{% block content %}
+<div class="container stack auth-page auth-page-wide">
+  <h1>Zkontroluj e-mail</h1>
+  <p>Poslali jsme ti přihlašovací odkaz a 6místný kód. Odkaz je platný 15&nbsp;minut.</p>
+
+  {% if error %}
+    <div class="flash flash-error" role="alert">{{ error }}</div>
+  {% endif %}
+
+  <div class="card stack">
+    <p><strong>Máš kód po ruce?</strong> Zadej ho sem:</p>
+    <form method="post" action="/auth/code">
+      <input type="hidden" name="next" value="{{ next | default('/') }}">
+      <div class="form-field">
+        <label for="email">Tvůj e-mail</label>
+        <input class="input" type="email" id="email" name="email" required autocomplete="email">
+      </div>
+      <div class="form-field">
+        <label for="code">Kód</label>
+        <input
+          class="input"
+          type="text"
+          id="code"
+          name="code"
+          required
+          inputmode="numeric"
+          pattern="\d{6}"
+          maxlength="6"
+          autocomplete="one-time-code"
+          placeholder="123456"
+        >
+      </div>
+      <button class="btn btn-primary" type="submit">Ověřit kód</button>
+    </form>
+  </div>
+
+  <p class="muted">Odkaz jsi nedostal(a)? Zkontroluj spam nebo <a href="/login">požádej o nový</a>.</p>
+</div>
+{% endblock %}

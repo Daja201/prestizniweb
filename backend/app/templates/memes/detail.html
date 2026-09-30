@@ -1,0 +1,17 @@
+<!-- Full meme view with reporting and owner controls. -->
+{% extends "base.html" %}
+{% from "components/report_button.html" import report_button %}
+{% from "memes/_like_button.html" import like_button %}
+{% block title %}Meme | Spolužáci{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="/static/css/memes.css">{% endblock %}
+{% block content %}
+<article class="meme-detail stack">
+  <a class="btn btn-ghost back-link" href="/memes">← Zpět na memes</a>
+  {% if meme.status == 'hidden' %}<span class="badge badge-warn">Skryto</span>{% endif %}
+  <img class="meme-detail-image" src="{{ media_url(meme.image_path) }}" alt="{{ meme.caption or 'Meme' }}" width="{{ meme.width }}" height="{{ meme.height }}">
+  <div class="row meme-detail-meta"><span>{{ meme.author.display_name }} · {{ meme.created_at|timeago }}</span>{{ like_button(meme, user, liked) }}</div>
+  {% if meme.caption %}<p class="meme-caption">{{ meme.caption }}</p>{% endif %}
+  {% if meme.tags %}<div class="row meme-tags">{% for tag in meme.tags %}<a class="pill" href="/memes?tag={{ tag.name|urlencode }}">{{ tag.name }}</a>{% endfor %}</div>{% endif %}
+  <div class="row meme-controls">{{ report_button('meme', meme.id) }}{% if meme.author_id == user.id %}<form method="post" action="/memes/{{ meme.id }}/delete"><button class="btn btn-danger" type="submit">Odstranit</button></form>{% endif %}</div>
+</article>
+{% endblock %}

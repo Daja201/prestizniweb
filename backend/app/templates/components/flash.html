@@ -1,0 +1,2 @@
+<!-- Displays the one-time message queued by the previous response. -->
+{% if flash %}<div class="container flash flash-{{ flash.level|default('info') }}" role="status">{{ flash.message }}</div>{% endif %}

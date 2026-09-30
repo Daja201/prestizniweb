@@ -1,0 +1,14 @@
+<!-- Class profile creation form. -->
+{% extends "base.html" %}
+{% block title %}Nová třída{% endblock %}
+{% block content %}
+<div class="container stack">
+  <h1>Založit profil třídy</h1>
+  {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+  <form class="card stack" method="post" action="/classes">
+    <label class="form-field">Název<input class="input" name="name" maxlength="60" minlength="2" required></label>
+    <label class="form-field">Popis<textarea class="textarea" name="description" maxlength="500" rows="6"></textarea></label>
+    <button class="btn btn-primary" type="submit">Odeslat ke schválení</button>
+  </form>
+</div>
+{% endblock %}
