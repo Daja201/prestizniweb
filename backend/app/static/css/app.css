@@ -62,11 +62,12 @@ img { max-width: 100%; }
 .nav-user { display: inline-flex; align-items: center; gap: .35rem; }
 .avatar { display: inline-grid; width: 1.8rem; height: 1.8rem; place-items: center; border: 1px solid currentColor; border-radius: 50%; background: var(--card); color: var(--fg); font-size: .65rem; font-weight: 900; }
 .avatar-square { border-radius: 2px; }
-.avatar-triangle { border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
-.avatar-dot::after { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; content: ""; }
 .avatar-photo { object-fit: cover; border: 1px solid var(--border); }
 .avatar-photo-row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
 .avatar-photo-row .input { width: auto; flex: 1 1 14rem; }
+.avatar-character-picker { display: flex; align-items: center; gap: .75rem; }
+.avatar-character-picker .input { width: 4rem; min-width: 4rem; text-align: center; font-size: 1.2rem; }
+.avatar-preview { width: 3rem; height: 3rem; font-size: 1rem; }
 .form-field-inline { display: flex; align-items: center; gap: .4rem; font-size: .85rem; }
 .site-footer { margin-top: 4rem; padding: 1.25rem 0; border-top: 1px solid var(--border); font-size: .75rem; }
 .site-footer .row { flex-wrap: wrap; }

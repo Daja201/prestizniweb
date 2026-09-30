@@ -46,7 +46,7 @@ def _visible_class(db: Session, slug: str, user: User | None):
         return None
     if item.status == "active":
         return item
-    if user and (user.role in {"moderator", "admin"} or item.created_by == user.id):
+    if user and (user.role in {"admin", "super_admin"} or item.created_by == user.id):
         return item
     return None
 
@@ -125,7 +125,7 @@ def join_class(request: Request, slug: str, db: Session = Depends(get_db), user:
 
 
 def _can_manage(item: SchoolClass, actor: User) -> bool:
-    return actor.role in {"moderator", "admin"} or item.created_by == actor.id
+    return actor.role in {"admin", "super_admin"} or item.created_by == actor.id
 
 
 @router.post("/c/{slug}/members/{user_id}/approve", response_class=HTMLResponse)

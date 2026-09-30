@@ -9,7 +9,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.db import get_db
-from app.core.deps import require_admin, require_mod
+from app.core.deps import require_admin, require_mod, require_super_admin
 from app.core.flash import flash
 from app.core.templates import render
 from app.models import AuditLog, ClassMember, Meme, Quote, Report, Resource, SchoolClass, TakedownRequest, User, UserSession
@@ -104,8 +104,8 @@ def resolve_report(
         author = _author(db, target_type, target_id)
         if not author:
             return HTMLResponse("Autor nebyl nalezen.", status_code=404)
-        if author.id == actor.id or author.role == "admin":
-            return HTMLResponse("Moderátor nemůže zablokovat sebe ani administrátora.", status_code=403)
+        if author.id == actor.id or author.role == "super_admin" or (author.role == "admin" and actor.role != "super_admin"):
+            return HTMLResponse("Nelze zablokovat sebe ani administrátora s vyššími pravomocemi.", status_code=403)
         author.status = "banned"
         sessions = db.scalars(select(UserSession).where(UserSession.user_id == author.id)).all()
         for session in sessions:
@@ -205,7 +205,7 @@ def ban_user(user_id: int, db: Session = Depends(get_db), actor: User = Depends(
     target = db.get(User, user_id)
     if not target:
         return HTMLResponse("Uživatel nebyl nalezen.", status_code=404)
-    if target.id == actor.id or target.role == "admin":
+    if target.id == actor.id or target.role == "super_admin" or (target.role == "admin" and actor.role != "super_admin"):
         return HTMLResponse("Tuto akci nelze provést.", status_code=403)
     target.status = "banned"
     for session in db.scalars(select(UserSession).where(UserSession.user_id == target.id)).all():
@@ -227,16 +227,22 @@ def unban_user(user_id: int, db: Session = Depends(get_db), actor: User = Depend
 
 
 @router.post("/users/{user_id}/role")
-def change_role(user_id: int, role: str = Form(...), db: Session = Depends(get_db), actor: User = Depends(require_admin)):
-    if role not in {"student", "teacher", "moderator", "admin"}:
+def change_role(user_id: int, role: str = Form(...), db: Session = Depends(get_db), actor: User = Depends(require_super_admin)):
+    if role not in {"user", "admin", "super_admin"}:
         return HTMLResponse("Neplatná role.", status_code=400)
     target = db.get(User, user_id)
     if not target:
         return HTMLResponse("Uživatel nebyl nalezen.", status_code=404)
-    if target.role == "admin" and role != "admin":
-        admins = int(db.scalar(select(func.count()).select_from(User).where(User.role == "admin", User.status != "deleted")) or 0)
+    if target.role == "super_admin" and role != "super_admin":
+        super_admins = int(db.scalar(select(func.count()).select_from(User).where(User.role == "super_admin", User.status != "deleted")) or 0)
+        if super_admins <= 1:
+            return HTMLResponse("Posledního superadmina nelze odebrat.", status_code=409)
+    if target.role in {"admin", "super_admin"} and role == "user":
+        admins = int(db.scalar(select(func.count()).select_from(User).where(User.role.in_(["admin", "super_admin"]), User.status != "deleted")) or 0)
         if admins <= 1:
             return HTMLResponse("Posledního administrátora nelze demotovat.", status_code=409)
+        if target.avatar == "square":
+            target.avatar = "circle"
     target.role = role
     audit.log(db, actor.id, "change_role", "user", target.id, {"role": role})
     db.commit()

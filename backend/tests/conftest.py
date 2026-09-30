@@ -82,7 +82,7 @@ def client():
 
 @pytest.fixture
 def make_user(db: Session):
-    def factory(email: str | None = None, role: str = "student", status: str = "active") -> User:
+    def factory(email: str | None = None, role: str = "user", status: str = "active") -> User:
         index = int(db.scalar(__import__("sqlalchemy").select(__import__("sqlalchemy").func.count()).select_from(User)) or 0) + 1
         email_value = email or f"student{index}@spseiostrava.cz"
         user = User(email=email_value.lower(), display_name=f"Student {index}", role=role, status=status)

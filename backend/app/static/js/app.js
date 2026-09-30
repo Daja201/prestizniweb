@@ -3,6 +3,15 @@ document.addEventListener("DOMContentLoaded", () => {
   if (flash) window.setTimeout(() => flash.remove(), 7000);
 
   const root = document.documentElement;
+  const avatarCharacterInput = document.querySelector("#avatar_character");
+  const avatarPreview = document.querySelector("[data-avatar-preview]");
+  if (avatarCharacterInput && avatarPreview) {
+    const fallbackCharacter = avatarCharacterInput.placeholder;
+    avatarCharacterInput.addEventListener("input", () => {
+      avatarPreview.textContent = avatarCharacterInput.value || fallbackCharacter;
+    });
+  }
+
   const themeToggle = document.querySelector("[data-theme-toggle]");
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "dark" || savedTheme === "light") root.dataset.theme = savedTheme;

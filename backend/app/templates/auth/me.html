@@ -19,7 +19,7 @@
           {% if user.avatar_path %}
             <img class="avatar avatar-photo" src="{{ media_url(user.avatar_path) }}" alt="" width="48" height="48">
           {% else %}
-            <span class="avatar avatar-{{ user.avatar or 'circle' }}" aria-hidden="true">{% if user.avatar not in ['dot', 'triangle'] %}{{ user.display_name[:1]|upper }}{% endif %}</span>
+            <span class="avatar avatar-{{ user.avatar or 'circle' }}" aria-hidden="true">{{ user.avatar_character if user.avatar_character is not none else user.display_name[:1]|upper }}</span>
           {% endif %}
           <input class="input" type="file" name="avatar_file" accept="image/png,image/jpeg,image/webp,image/gif">
         </div>
@@ -30,12 +30,21 @@
       </div>
 
       <div class="form-field">
-        <label>Fallback icon (used when no photo is uploaded)</label>
+        <label for="avatar_character">Avatar character</label>
+        <div class="avatar-character-picker">
+          <input class="input" id="avatar_character" name="avatar_character" type="text" maxlength="1" pattern="[ -~]" autocomplete="off" placeholder="{{ user.display_name[:1]|upper }}" value="{{ user.avatar_character if user.avatar_character is not none else '' }}" aria-describedby="avatar-character-help">
+          <span class="avatar avatar-preview avatar-{{ user.avatar or 'circle' }}" data-avatar-preview aria-hidden="true">{{ user.avatar_character if user.avatar_character is not none else user.display_name[:1]|upper }}</span>
+        </div>
+        <p id="avatar-character-help" class="muted">One printable ASCII character (space through ~). Leave blank to use the first letter of your name in a round avatar.</p>
+      </div>
+
+      <div class="form-field">
+        <label>Avatar shape</label>
         <div class="avatar-picker">
-          {% for option in ['circle', 'square', 'triangle', 'dot'] %}
+          {% for option in (['circle', 'square'] if user.role in ['admin', 'super_admin'] else ['circle']) %}
           <div class="avatar-option">
             <input id="avatar-{{ option }}" type="radio" name="avatar" value="{{ option }}"{% if (user.avatar or 'circle') == option %} checked{% endif %}>
-            <label for="avatar-{{ option }}"><span class="avatar avatar-{{ option }}" aria-hidden="true">{% if option == 'circle' or option == 'square' %}{{ user.display_name[:1]|upper }}{% endif %}</span></label>
+            <label for="avatar-{{ option }}"><span class="avatar avatar-{{ option }}" aria-hidden="true">{{ user.avatar_character if user.avatar_character is not none else user.display_name[:1]|upper }}</span></label>
           </div>
           {% endfor %}
         </div>

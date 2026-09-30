@@ -40,7 +40,7 @@ def _parse_tags(raw: str) -> list[str]:
 
 
 def _can_open_hidden(user: User) -> bool:
-    return user.role in {"moderator", "admin"}
+    return user.role in {"admin", "super_admin"}
 
 
 def _get_meme(db: Session, meme_id: int, user: User) -> Meme | None:

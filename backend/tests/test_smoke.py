@@ -29,8 +29,8 @@ def test_private_routes_redirect_anonymous(client):
         assert "/login" in response.headers.get("location", "")
 
 
-def test_student_moderator_admin_get_routes(client, make_user, login):
-    for role in ("student", "moderator", "admin"):
+def test_user_admin_super_admin_get_routes(client, make_user, login):
+    for role in ("user", "admin", "super_admin"):
         user = make_user(role=role)
         login(client, user)
         for path in PRIVATE:
@@ -41,7 +41,7 @@ def test_student_moderator_admin_get_routes(client, make_user, login):
 
 def test_full_content_journey(client, make_user, login):
     student = make_user()
-    moderator = make_user(role="moderator")
+    moderator = make_user(role="admin")
     login(client, student)
 
     image = BytesIO()

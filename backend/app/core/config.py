@@ -17,8 +17,8 @@ class Settings(BaseSettings):
     postgres_password: str = "spseiostrava"
     database_url: str = "postgresql+psycopg://spseiostrava:spseiostrava@db:5432/spseiostrava"
 
-    allowed_email_domain: str = "spseiostrava.cz"
     admin_emails: str = ""
+    super_admin_emails: str = ""
 
     contact_email: str = "contact@example.cz"
 
@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     @cached_property
     def admin_email_list(self) -> list[str]:
         return [e.strip().lower() for e in self.admin_emails.split(",") if e.strip()]
+
+    @cached_property
+    def super_admin_email_list(self) -> list[str]:
+        return [e.strip().lower() for e in self.super_admin_emails.split(",") if e.strip()]
 
     @property
     def is_prod(self) -> bool:

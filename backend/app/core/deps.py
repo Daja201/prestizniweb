@@ -20,19 +20,28 @@ def require_user(request: Request, user: User | None = Depends(current_user)) ->
 
 
 def require_mod(request: Request, user: User | None = Depends(current_user)) -> User:
-    """Require moderator or admin role."""
+    """Require admin-level moderation access."""
     if user is None:
         _redirect_to_login(request)
-    if user.role not in ("moderator", "admin"):  # type: ignore[union-attr]
+    if user.role not in ("admin", "super_admin"):  # type: ignore[union-attr]
         raise _forbidden(request)
     return user  # type: ignore[return-value]
 
 
 def require_admin(request: Request, user: User | None = Depends(current_user)) -> User:
-    """Require admin role."""
+    """Require admin or super-admin role."""
     if user is None:
         _redirect_to_login(request)
-    if user.role != "admin":  # type: ignore[union-attr]
+    if user.role not in ("admin", "super_admin"):  # type: ignore[union-attr]
+        raise _forbidden(request)
+    return user  # type: ignore[return-value]
+
+
+def require_super_admin(request: Request, user: User | None = Depends(current_user)) -> User:
+    """Require the highest administrative role."""
+    if user is None:
+        _redirect_to_login(request)
+    if user.role != "super_admin":  # type: ignore[union-attr]
         raise _forbidden(request)
     return user  # type: ignore[return-value]
 

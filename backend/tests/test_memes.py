@@ -106,9 +106,9 @@ def test_feed_cursor_and_hidden_deleted_visibility(client, db, make_user, login)
     assert client.get(f"/memes/{deleted.id}").status_code == 404
 
 
-def test_hidden_meme_is_available_to_moderator(client, db, make_user, login) -> None:
+def test_hidden_meme_is_available_to_admin(client, db, make_user, login) -> None:
     author = make_user()
-    moderator = make_user(role="moderator")
+    moderator = make_user(role="admin")
     hidden = _add_meme(db, author.id, "moderator-only", "hidden")
     login(client, moderator)
     response = client.get(f"/memes/{hidden.id}")

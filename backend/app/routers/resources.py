@@ -221,12 +221,12 @@ def _resource_visible_to(user: User, resource: Resource) -> bool:
         return False
     if resource.status == "visible":
         return True
-    return user.role in {"moderator", "admin"} and resource.status == "hidden"
+    return user.role in {"admin", "super_admin"} and resource.status == "hidden"
 
 
 def _resource_base_query(user: User):
     visibility = Resource.status == "visible"
-    if user.role in {"moderator", "admin"}:
+    if user.role in {"admin", "super_admin"}:
         visibility = Resource.status.in_(["visible", "hidden"])
     return (
         select(Resource)

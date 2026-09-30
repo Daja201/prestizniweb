@@ -27,7 +27,7 @@ def _search_pattern(value: str) -> str:
 
 
 def _is_moderator(user: User) -> bool:
-    return user.role in {"moderator", "admin"}
+    return user.role in {"admin", "super_admin"}
 
 
 def _quote_filter_for_user(user: User):

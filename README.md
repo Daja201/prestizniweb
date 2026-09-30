@@ -7,7 +7,7 @@ Private, unofficial community site for the community site students. The applicat
 
 1. Copy `.env.example` to `.env` and set a random `SECRET_KEY` (for example, `python3 -c "import secrets; print(secrets.token_hex(32))"`). Set `SMTP_HOST=` to use the development console login link/code.
 2. Start the stack: `cp .env.example .env && docker compose up --build`.
-3. Open `http://localhost`. The first successful login for an address in `ADMIN_EMAILS` creates an administrator.
+3. Open `http://localhost`. The first successful login for an address in `SUPER_ADMIN_EMAILS` creates a super administrator; addresses in `ADMIN_EMAILS` become administrators.
 4. Run tests with `docker compose run --rm web pytest`.
 
 Only Caddy publishes host ports. PostgreSQL, the web app, and backups remain on the internal Compose network.
@@ -27,7 +27,7 @@ Only Caddy publishes host ports. PostgreSQL, the web app, and backups remain on 
    ```
 
 4. Install Docker Engine and the Docker Compose plugin using Docker's official Ubuntu instructions. Add your deployment account to the `docker` group, then reconnect.
-5. Clone the repository, copy `.env.example` to `.env`, and set a strong `SECRET_KEY`, unique database password, real `DOMAIN` and matching `BASE_URL`, contact address, SMTP settings, and `ADMIN_EMAILS`. `DOMAIN` should be the public hostname (for example `community.example.cz`); `BASE_URL` should be `https://community.example.cz`.
+5. Clone the repository, copy `.env.example` to `.env`, and set a strong `SECRET_KEY`, unique database password, real `DOMAIN` and matching `BASE_URL`, contact address, SMTP settings, `ADMIN_EMAILS`, and at least one `SUPER_ADMIN_EMAILS` address. These addresses must use `ALLOWED_EMAIL_DOMAIN`. `DOMAIN` should be the public hostname (for example `community.example.cz`); `BASE_URL` should be `https://community.example.cz`.
 6. Create an `A` record pointing the hostname to the VM's reserved public IP. If using Cloudflare proxying, start with DNS-only until Caddy has obtained a certificate. When proxying is enabled, use Full (strict) TLS mode and ensure Cloudflare reaches the origin on 80/443. Set `DOMAIN=:80` only when TLS terminates at a trusted external proxy and `BASE_URL` remains the public HTTPS URL.
 7. Start and check the services:
 

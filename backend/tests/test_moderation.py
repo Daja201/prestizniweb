@@ -52,7 +52,7 @@ def test_auto_hide_threshold(client, db, make_user, login):
 
 
 def test_ban_flow(client, db, make_user, login):
-    moderator = make_user(role="moderator")
+    moderator = make_user(role="admin")
     author = make_user()
     meme = _meme(db, author)
     login(client, moderator)
@@ -62,8 +62,25 @@ def test_ban_flow(client, db, make_user, login):
 
 
 def test_last_admin_protection(client, make_user, login):
-    admin = make_user(role="admin")
-    other = make_user()
-    login(client, admin)
-    response = client.post(f"/admin/users/{admin.id}/role", data={"role": "student"})
+    super_admin = make_user(role="super_admin")
+    login(client, super_admin)
+    response = client.post(f"/admin/users/{super_admin.id}/role", data={"role": "user"})
     assert response.status_code == 409
+
+
+def test_regular_admin_cannot_assign_roles(client, make_user, login):
+    admin = make_user(role="admin")
+    target = make_user()
+    login(client, admin)
+    response = client.post(f"/admin/users/{target.id}/role", data={"role": "super_admin"})
+    assert response.status_code == 403
+
+
+def test_super_admin_can_assign_admin_role(client, db, make_user, login):
+    super_admin = make_user(role="super_admin")
+    target = make_user()
+    login(client, super_admin)
+    response = client.post(f"/admin/users/{target.id}/role", data={"role": "admin"})
+    assert response.status_code == 303
+    db.expire_all()
+    assert db.get(User, target.id).role == "admin"

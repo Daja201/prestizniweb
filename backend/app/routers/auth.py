@@ -38,11 +38,6 @@ _TOKEN_TTL = timedelta(minutes=15)
 _MAX_CODE_ATTEMPTS = 5
 _COOKIE_MAX_AGE = 30 * 24 * 3600  # 30 days in seconds
 
-_EMAIL_RE = re.compile(
-    r"^[a-z0-9._-]+@(?P<domain>[a-z0-9.-]+)$"
-)
-
-
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 def _hmac(value: str) -> str:
@@ -75,12 +70,12 @@ def _safe_next(next_param: str | None) -> str:
     return "/"
 
 
-def _read_upload_sync(upload) -> bytes:
+def _read_upload_sync(upload, max_bytes: int) -> bytes:
     """Read an UploadFile's bytes from sync code (mirrors the form-parsing pattern above)."""
     import asyncio
 
     async def _get_bytes():
-        return await upload.read()
+        return await upload.read(max_bytes + 1)
 
     loop = asyncio.new_event_loop()
     try:
@@ -94,24 +89,14 @@ def _display_name_from_email(local: str) -> str:
     return " ".join(part.capitalize() for part in local.replace(".", " ").replace("_", " ").split())
 
 
-def _validate_school_email(email: str) -> str:
-    """Return normalised email or raise ValueError with a Czech message."""
+def _validate_email_address(email: str) -> str:
+    """Return a normalized syntactically valid email address."""
     email = email.strip().lower()
-    # Disallow + aliases
-    if "+" in email:
-        raise ValueError("Aliasy s '+' nejsou povoleny.")
     try:
         info = validate_email(email, check_deliverability=False)
-        email = info.normalized.lower()
+        return info.normalized.lower()
     except EmailNotValidError:
         raise ValueError("Neplatná e-mailová adresa.")
-
-    match = _EMAIL_RE.match(email)
-    if not match or match.group("domain") != settings.allowed_email_domain:
-        raise ValueError(
-            f"Přihlášení je možné pouze pro adresy @{settings.allowed_email_domain}."
-        )
-    return email
 
 
 def _get_or_create_user(db: Session, email: str) -> User:
@@ -119,7 +104,11 @@ def _get_or_create_user(db: Session, email: str) -> User:
     if user is None:
         local = email.split("@")[0]
         display_name = _display_name_from_email(local)
-        role = "admin" if email in settings.admin_email_list else "student"
+        role = (
+            "super_admin" if email in settings.super_admin_email_list
+            else "admin" if email in settings.admin_email_list
+            else "user"
+        )
         user = User(
             email=email,
             display_name=display_name,
@@ -128,6 +117,10 @@ def _get_or_create_user(db: Session, email: str) -> User:
         )
         db.add(user)
         db.flush()
+    elif email in settings.super_admin_email_list:
+        user.role = "super_admin"
+    elif email in settings.admin_email_list and user.role == "user":
+        user.role = "admin"
     return user
 
 
@@ -253,7 +246,7 @@ def login_post(
     next_path = form.get("next", "/")
 
     try:
-        email = _validate_school_email(str(email_raw))
+        email = _validate_email_address(str(email_raw))
     except ValueError:
         # Always show "check your email" to avoid enumeration
         pass
@@ -450,6 +443,9 @@ def me_post(request: Request, db: Session = Depends(get_db), user: User = Depend
 
     display_name = str(form.get("display_name", "")).strip()
     avatar = str(form.get("avatar", "circle")).strip().lower()
+    avatar_character = str(form.get("avatar_character", ""))
+    if avatar_character == "":
+        avatar_character = None
     remove_photo = str(form.get("remove_avatar_photo", "")).strip() == "1"
     upload = form.get("avatar_file")
 
@@ -459,15 +455,25 @@ def me_post(request: Request, db: Session = Depends(get_db), user: User = Depend
     if any(unicodedata.category(c).startswith("C") for c in display_name):
         return render(request, "auth/me.html", error="Jméno obsahuje nepovoluné znaky.")
 
-    if avatar not in {"circle", "square", "triangle", "dot"}:
+    if avatar not in {"circle", "square"}:
         return render(request, "auth/me.html", error="Neplatný profilový symbol.")
+    if avatar_character is not None and (
+        len(avatar_character) != 1 or not 32 <= ord(avatar_character) <= 126
+    ):
+        return render(request, "auth/me.html", error="Znak avatara musí být jeden tisknutelný znak ASCII.")
 
     from app.core.storage import save_bytes, delete as storage_delete
     from app.services.images import process_avatar_image
 
+    profile_user = db.get(User, user.id)
+    if profile_user is None:
+        return RedirectResponse("/login", status_code=303)
+    if avatar == "square" and profile_user.role not in {"admin", "super_admin"}:
+        return render(request, "auth/me.html", error="Čtvercový avatar je dostupný pouze administrátorům.")
+
     new_avatar_path = None
     if upload is not None and getattr(upload, "filename", ""):
-        raw = _read_upload_sync(upload)
+        raw = _read_upload_sync(upload, settings.max_image_mb * 1024 * 1024)
         if raw:
             try:
                 processed = process_avatar_image(raw)
@@ -475,16 +481,25 @@ def me_post(request: Request, db: Session = Depends(get_db), user: User = Depend
                 return render(request, "auth/me.html", error=str(exc))
             new_avatar_path = save_bytes("avatars", processed, "webp")
 
-    user.display_name = display_name
-    user.avatar = avatar
+    old_avatar_path = profile_user.avatar_path
+    delete_old_avatar = False
+    profile_user.display_name = display_name
+    profile_user.avatar = avatar
+    profile_user.avatar_character = avatar_character
     if new_avatar_path:
-        old_path = user.avatar_path
-        user.avatar_path = new_avatar_path
-        storage_delete(old_path)
-    elif remove_photo and user.avatar_path:
-        storage_delete(user.avatar_path)
-        user.avatar_path = None
-    db.commit()
+        profile_user.avatar_path = new_avatar_path
+        delete_old_avatar = old_avatar_path is not None
+    elif remove_photo and old_avatar_path:
+        profile_user.avatar_path = None
+        delete_old_avatar = True
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        storage_delete(new_avatar_path)
+        raise
+    if delete_old_avatar:
+        storage_delete(old_avatar_path)
     response = RedirectResponse("/me", status_code=303)
     flash(response, "Settings saved.", "success")
     return response
@@ -507,37 +522,10 @@ def me_delete(request: Request, db: Session = Depends(get_db), user: User = Depe
     if confirm != "SMAZAT":
         return render(request, "auth/me.html", error="Pro smazání účtu napiš SMAZAT.")
 
-    from app.models import Meme, Quote, Resource, ClassMember, MemeLike, QuoteVote, ResourceVote, SchoolClass
+    from app.models import Meme, Quote, Resource, ClassMember, MemeLike, QuoteVote, ResourceVote
     from app.core.storage import delete as storage_delete
 
     now = datetime.now(timezone.utc)
-
-    # Remove the uploaded profile photo, if any.
-    if user.avatar_path:
-        storage_delete(user.avatar_path)
-        user.avatar_path = None
-
-    # Hand off ownership of any class profiles this user created, so they
-    # don't become permanently unmanageable once this account is anonymised.
-    owned_classes = db.query(SchoolClass).filter(SchoolClass.created_by == user.id).all()
-    for school_class in owned_classes:
-        successor = (
-            db.query(ClassMember)
-            .filter(
-                ClassMember.class_id == school_class.id,
-                ClassMember.user_id != user.id,
-                ClassMember.status == "approved",
-            )
-            .order_by(ClassMember.created_at.asc())
-            .first()
-        )
-        if successor:
-            successor.role = "owner"
-            school_class.created_by = successor.user_id
-        else:
-            # No one left to hand it to; hide it rather than leave an
-            # ownerless, uneditable-by-anyone-but-a-moderator profile.
-            school_class.status = "hidden"
 
     # Anonymise memes
     memes = db.query(Meme).filter(Meme.author_id == user.id, Meme.status != "deleted").all()
