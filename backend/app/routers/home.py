@@ -1,13 +1,11 @@
-# Serves the public landing page and the signed-in home dashboard.
+# Serves the public landing page; signed-in users are sent straight to /me.
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import desc, select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import current_user
-from app.core.templates import render
-from app.models import Meme, Quote, User
+from app.models import User
 
 router = APIRouter()
 
@@ -21,22 +19,4 @@ def home(
     if user is None:
         return RedirectResponse("/login", status_code=303)
 
-    memes = list(
-        db.scalars(
-            select(Meme)
-            .options(selectinload(Meme.author))
-            .where(Meme.status == "visible")
-            .order_by(desc(Meme.id))
-            .limit(8)
-        ).all()
-    )
-    quotes = list(
-        db.scalars(
-            select(Quote)
-            .options(selectinload(Quote.author))
-            .where(Quote.status == "visible")
-            .order_by(desc(Quote.id))
-            .limit(5)
-        ).all()
-    )
-    return render(request, "home.html", memes=memes, quotes=quotes)
+    return RedirectResponse("/me", status_code=303)

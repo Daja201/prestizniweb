@@ -25,7 +25,7 @@ from app.models import ClassMember, Resource, ResourceVote, SchoolClass, Tag, Us
 
 router = APIRouter()
 
-[
+SUBJECTS = [
     "English Language",
     "Chemistry and Ecology",
     "History",
