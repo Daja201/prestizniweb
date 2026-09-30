@@ -15,7 +15,7 @@ from app.core.config import settings
 from sqlalchemy import create_engine
 from app.core.db import SessionLocal
 from app.main import app
-from app.models import AuditLog, ClassMember, LoginToken, Meme, MemeLike, Quote, QuoteVote, Report, Resource, ResourceVote, SchoolClass, TakedownRequest, User, UserSession
+from app.models import AuditLog, ClassMember, LoginToken, Meme, MemeLike, Quote, QuoteVote, RateLimitBucket, Report, Resource, ResourceVote, SchoolClass, TakedownRequest, User, UserSession
 from app.services.sessions import create_session
 
 
@@ -58,7 +58,7 @@ def clean_db():
     yield
     db = SessionLocal()
     try:
-        for model in (Report, AuditLog, TakedownRequest, ResourceVote, Resource, QuoteVote, Quote, MemeLike, Meme, ClassMember, SchoolClass, UserSession, LoginToken, User):
+        for model in (RateLimitBucket, Report, AuditLog, TakedownRequest, ResourceVote, Resource, QuoteVote, Quote, MemeLike, Meme, ClassMember, SchoolClass, UserSession, LoginToken, User):
             db.execute(delete(model))
         db.commit()
     finally:

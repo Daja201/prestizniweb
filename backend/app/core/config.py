@@ -28,6 +28,14 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from: str = "no-reply@example.cz"
 
+    turnstile_site_key: str = ""
+    turnstile_secret_key: str = ""
+    login_captcha_threshold: int = 3
+    login_rate_limit: int = 20
+    login_email_rate_limit: int = 5
+    rate_limit_cooldown_seconds: int = 900
+    login_rate_limit_window_seconds: int = 3600
+
     upload_dir: str = "/data/uploads"
     max_image_mb: int = 8
     max_resource_mb: int = 25

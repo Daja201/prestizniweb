@@ -12,6 +12,7 @@ from app.models.content import (
 )
 from app.models.moderation import AuditLog, Report, TakedownRequest
 from app.models.school_class import ClassMember, SchoolClass
+from app.models.security import RateLimitBucket
 from app.models.user import LoginToken, User, UserSession
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "Report",
     "TakedownRequest",
     "AuditLog",
+    "RateLimitBucket",
 ]

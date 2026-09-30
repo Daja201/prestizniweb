@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 from email_validator import validate_email, EmailNotValidError
+import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, FastAPI, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -19,7 +20,7 @@ from app.core.config import settings
 from app.core.db import get_db, SessionLocal
 from app.core.deps import current_user, require_user
 from app.core.flash import flash
-from app.core.ratelimit import rate_limit
+from app.core.ratelimit import clear_attempts, get_attempt_count, rate_limit
 from app.core.templates import render
 from app.models import LoginToken, User
 from app.services.mailer import send_login_email
@@ -68,6 +69,47 @@ def _safe_next(next_param: str | None) -> str:
     if next_param and re.match(r"^/[^/]", next_param):
         return next_param
     return "/"
+
+
+def _request_ip(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+def _login_captcha_required(request: Request) -> bool:
+    if not settings.turnstile_site_key or not settings.turnstile_secret_key:
+        return False
+    db = SessionLocal()
+    try:
+        attempts = get_attempt_count(
+            db,
+            "login_ip",
+            f"ip:{_request_ip(request)}",
+            settings.login_rate_limit_window_seconds,
+        )
+    finally:
+        db.close()
+    return attempts >= settings.login_captcha_threshold
+
+
+def _verify_turnstile(token: str, request: Request) -> bool:
+    if not token or not settings.turnstile_secret_key:
+        return False
+    try:
+        response = httpx.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data={
+                "secret": settings.turnstile_secret_key,
+                "response": token,
+                "remoteip": _request_ip(request),
+            },
+            timeout=5.0,
+        )
+        response.raise_for_status()
+        result = response.json()
+        return result.get("success") is True
+    except (httpx.HTTPError, ValueError):
+        logger.warning("Turnstile verification failed")
+        return False
 
 
 def _read_upload_sync(upload, max_bytes: int) -> bytes:
@@ -207,14 +249,44 @@ def setup(app: FastAPI) -> None:
 def login_page(request: Request, next: str = "/"):
     if request.state.user:
         return RedirectResponse("/", status_code=303)
-    return render(request, "auth/login.html", next=next)
+    captcha_required = _login_captcha_required(request)
+    return render(
+        request,
+        "auth/login.html",
+        next=next,
+        turnstile_site_key=settings.turnstile_site_key if captcha_required else "",
+    )
 
 
-_rate_limit_email = rate_limit("login_email", limit=5, seconds=3600)
-_rate_limit_ip = rate_limit("login_ip", limit=20, seconds=3600)
+_rate_limit_email = rate_limit(
+    "login_email",
+    limit=settings.login_email_rate_limit,
+    seconds=settings.login_rate_limit_window_seconds,
+    key_field="email",
+    cooldown_seconds=settings.rate_limit_cooldown_seconds,
+)
+_rate_limit_ip = rate_limit(
+    "login_ip",
+    limit=settings.login_rate_limit,
+    seconds=settings.login_rate_limit_window_seconds,
+    cooldown_seconds=settings.rate_limit_cooldown_seconds,
+)
+_rate_limit_code_ip = rate_limit(
+    "login_code_ip", limit=20, seconds=settings.login_rate_limit_window_seconds, cooldown_seconds=settings.rate_limit_cooldown_seconds
+)
+_rate_limit_code_email = rate_limit(
+    "login_code_email",
+    limit=10,
+    seconds=settings.login_rate_limit_window_seconds,
+    key_field="email",
+    cooldown_seconds=settings.rate_limit_cooldown_seconds,
+)
 
 
-@router.post("/login")
+@router.post(
+    "/login",
+    dependencies=[Depends(_rate_limit_ip), Depends(_rate_limit_email)],
+)
 def login_post(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -244,6 +316,17 @@ def login_post(
 
     email_raw = form.get("email", "")
     next_path = form.get("next", "/")
+
+    captcha_required = _login_captcha_required(request)
+    if captcha_required and not _verify_turnstile(str(form.get("cf-turnstile-response", "")), request):
+        return render(
+            request,
+            "auth/login.html",
+            429,
+            next=_safe_next(str(next_path)),
+            error="Please complete the security check and try again.",
+            turnstile_site_key=settings.turnstile_site_key,
+        )
 
     try:
         email = _validate_email_address(str(email_raw))
@@ -281,7 +364,7 @@ def verify_get(request: Request, token: str = ""):
     return render(request, "auth/confirm.html", token=token)
 
 
-@router.post("/auth/verify")
+@router.post("/auth/verify", dependencies=[Depends(rate_limit("login_verify_ip", 30, 3600))])
 def verify_post(
     request: Request,
     db: Session = Depends(get_db),
@@ -302,7 +385,10 @@ def verify_post(
     return _consume_token(request, db, raw_token, next_path)
 
 
-@router.post("/auth/code")
+@router.post(
+    "/auth/code",
+    dependencies=[Depends(_rate_limit_code_ip), Depends(_rate_limit_code_email)],
+)
 def code_post(request: Request, db: Session = Depends(get_db)):
     import asyncio
 
@@ -380,7 +466,13 @@ def _finish_login(request: Request, db: Session, email: str, next_path: str):
     user.last_login_at = datetime.now(timezone.utc)
     db.commit()
 
-    raw_token = create_session(db, user, request.client.host if request.client else None, request.headers.get("user-agent"))
+    client_ip = _request_ip(request)
+    clear_attempts(db, "login_ip", f"ip:{client_ip}")
+    clear_attempts(db, "login_email", email)
+    clear_attempts(db, "login_code_ip", f"ip:{client_ip}")
+    clear_attempts(db, "login_code_email", email)
+
+    raw_token = create_session(db, user, client_ip, request.headers.get("user-agent"))
     response = RedirectResponse(next_path, status_code=303)
     _set_session_cookie(response, raw_token)
     return response
