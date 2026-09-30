@@ -1,0 +1,46 @@
+<!-- Ranked list of users with the strongest report-based safety signals. Built only from
+     reports and moderation history already collected for moderation — no IP/device tracking. -->
+{% extends "base.html" %}
+{% block title %}Safety signals{% endblock %}
+{% block content %}
+<div class="container stack">
+  <h1>Safety signals</h1>
+  <p class="muted">Ranked from reports already filed by students and past moderation actions. Multiple different reporters count far more than repeated reports from one person. Always review the actual content and reports before acting &mdash; this list is a starting point, not a verdict.</p>
+  {% if rows %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Distinct reporters</th>
+          <th>Open reports</th>
+          <th>Total reports</th>
+          <th>Harassment / personal data</th>
+          <th>Prior bans</th>
+          <th>Top reasons</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.user.display_name }} <span class="muted">({{ row.user.email }})</span></td>
+          <td>{{ row.distinct_reporters }}</td>
+          <td>{{ row.open_reports }}</td>
+          <td>{{ row.total_reports }}</td>
+          <td>{{ row.concerning_count }}</td>
+          <td>{{ row.prior_actions }}</td>
+          <td>{% for reason, count in row.top_reasons %}{{ reason }} ({{ count }}){% if not loop.last %}, {% endif %}{% endfor %}</td>
+          <td>{% if row.user.status == 'banned' %}<span class="badge badge-warn">Banned</span>{% else %}{{ row.user.status }}{% endif %}</td>
+          <td><a class="btn btn-ghost" href="/admin/users?q={{ row.user.email }}">Open profile</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No reports have been filed yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

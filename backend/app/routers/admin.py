@@ -1,6 +1,7 @@
 # Moderator and administrator dashboards and moderation actions.
 from __future__ import annotations
 
+from collections import Counter
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -131,6 +132,74 @@ def resolve_report(
         report.handled_at = datetime.now(timezone.utc)
     db.commit()
     return HTMLResponse("Resolved.")
+
+
+@router.get("/safety", response_class=HTMLResponse)
+def safety(request: Request, db: Session = Depends(get_db), actor: User = Depends(require_mod)):
+    """Surface users with the strongest signals of harmful behaviour, from reports already filed.
+
+    This deliberately uses only data collected for moderation (reports + moderation history),
+    not IP/device tracking. It ranks people moderators may want to review, it never publishes
+    a per-user activity/location profile.
+    """
+    reports = list(db.scalars(select(Report).order_by(Report.id.desc())).all())
+
+    agg: dict[int, dict] = {}
+    for r in reports:
+        author = _author(db, r.target_type, r.target_id)
+        if author is None or author.id == r.reporter_id:
+            continue
+        entry = agg.setdefault(
+            author.id,
+            {"user": author, "reporters": set(), "total": 0, "open": 0, "reasons": Counter(), "latest_id": 0},
+        )
+        entry["reporters"].add(r.reporter_id)
+        entry["total"] += 1
+        if r.status == "open":
+            entry["open"] += 1
+        entry["reasons"][r.reason] += 1
+        entry["latest_id"] = max(entry["latest_id"], r.id)
+
+    # Prior direct moderation actions taken against each user (bans/unbans), from the audit trail.
+    prior_user_actions = dict(
+        db.execute(
+            select(AuditLog.target_id, func.count())
+            .where(AuditLog.target_type == "user", AuditLog.action.in_(["ban_user", "ban_author"]))
+            .group_by(AuditLog.target_id)
+        ).all()
+    )
+
+    concerning_reasons = {"harassment", "personal_info"}
+
+    rows = []
+    for user_id, data in agg.items():
+        user = data["user"]
+        distinct_reporters = len(data["reporters"])
+        concerning_count = sum(count for reason, count in data["reasons"].items() if reason in concerning_reasons)
+        prior_actions = prior_user_actions.get(user_id, 0)
+        # Weighted so that several *different* people reporting someone outweighs
+        # one person reporting the same person repeatedly (a much weaker signal).
+        score = (
+            distinct_reporters * 4
+            + data["open"] * 2
+            + concerning_count * 3
+            + prior_actions * 5
+            + (6 if user.status == "banned" else 0)
+        )
+        rows.append(
+            {
+                "user": user,
+                "distinct_reporters": distinct_reporters,
+                "open_reports": data["open"],
+                "total_reports": data["total"],
+                "concerning_count": concerning_count,
+                "top_reasons": data["reasons"].most_common(3),
+                "prior_actions": prior_actions,
+                "score": score,
+            }
+        )
+    rows.sort(key=lambda row: (row["score"], row["total_reports"]), reverse=True)
+    return render(request, "admin/safety.html", rows=rows)
 
 
 @router.get("/quotes", response_class=HTMLResponse)

@@ -4,5 +4,5 @@
 {% block content %}
 <div class="container stack"><h1>Moderace</h1><div class="grid">
 {% for key, label in [('reports','Open reports'),('quotes','Pending quotes'),('classes','Pending classes'),('takedowns','Takedown requests'),('users','Users'),('banned','Banned')] %}<div class="card"><strong>{{ label }}</strong><div>{{ counters[key] }}</div></div>{% endfor %}
-</div><nav class="row"><a href="/admin/reports">Reports</a><a href="/admin/quotes">Quotes</a><a href="/admin/classes">Classes</a><a href="/admin/users">Users</a><a href="/admin/audit">Audit</a><a href="/admin/takedowns">Takedown</a></nav></div>
+</div><nav class="row"><a href="/admin/reports">Reports</a><a href="/admin/safety">Safety signals</a><a href="/admin/quotes">Quotes</a><a href="/admin/classes">Classes</a><a href="/admin/users">Users</a><a href="/admin/audit">Audit</a><a href="/admin/takedowns">Takedown</a></nav></div>
 {% endblock %}
