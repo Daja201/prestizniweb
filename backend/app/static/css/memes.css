@@ -4,8 +4,8 @@
 .meme-grid { position: relative; display: grid; min-height: min(72vh, 50rem); place-items: center; }
 .meme-card { display: none; width: min(100%, 44rem); flex-direction: column; gap: .65rem; padding: .65rem; border: 1px solid var(--border); overflow-wrap: anywhere; }
 .meme-card.is-active { display: flex; }
-.meme-image-link { display: block; overflow: hidden; border: 1px solid var(--border); background: var(--bg); }
-.meme-image { display: block; width: 100%; max-height: 68vh; object-fit: contain; }
+.meme-image-link { display: flex; justify-content: center; overflow: hidden; border: 1px solid var(--border); background: var(--bg); }
+.meme-image { display: block; width: min(100%, 30vw, 28rem); height: auto; max-height: 62vh; object-fit: contain; }
 .meme-caption { margin: 0; white-space: pre-wrap; }
 .meme-card-footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
 .like-form { display: inline-flex; margin: 0; }
@@ -14,9 +14,13 @@
 .meme-sentinel { display: none; }
 .meme-hidden { border-color: var(--accent); }
 .meme-detail { width: min(100%, 54rem); margin: 2rem auto; }
-.meme-detail-image { display: block; max-height: 78vh; width: auto; max-width: 100%; margin-inline: auto; object-fit: contain; border: 1px solid var(--border); background: var(--bg); }
+.meme-detail-image { display: block; width: auto; max-width: min(100%, 30vw, 28rem); max-height: 68vh; margin-inline: auto; object-fit: contain; border: 1px solid var(--border); background: var(--bg); }
 .meme-detail-meta, .meme-tags, .meme-controls { justify-content: flex-start; flex-wrap: wrap; }
 .meme-controls { justify-content: space-between; }
 .meme-tags .pill { text-decoration: none; }
 .meme-pager { justify-content: center; }
 .form-page { width: min(100%, 42rem); margin: 2rem auto; }
+@media (max-width: 640px) {
+	.meme-image { width: min(100%, 82vw); max-height: 56vh; }
+	.meme-detail-image { max-width: min(100%, 86vw); max-height: 68vh; }
+}

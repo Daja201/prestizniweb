@@ -19,6 +19,10 @@ PRIVATE = [
 def test_public_routes(client):
     for path in PUBLIC:
         response = client.get(path)
+        if path == "/":
+            assert response.status_code == 303
+            assert response.headers["location"] == "/login"
+            continue
         assert response.status_code == 200, path
 
 

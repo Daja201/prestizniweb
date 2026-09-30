@@ -44,11 +44,21 @@ document.addEventListener("DOMContentLoaded", () => {
       if (prev) prev.disabled = index === 0;
       if (next) next.disabled = index === memeCards.length - 1;
     };
-    prev?.addEventListener("click", () => { if (index > 0) { index -= 1; renderMeme(); } });
-    next?.addEventListener("click", () => { if (index < memeCards.length - 1) { index += 1; renderMeme(); } });
+    const showPrevious = () => { if (index > 0) { index -= 1; renderMeme(); } };
+    const showNext = () => { if (index < memeCards.length - 1) { index += 1; renderMeme(); } };
+    prev?.addEventListener("click", showPrevious);
+    next?.addEventListener("click", showNext);
     document.addEventListener("keydown", (event) => {
-      if (event.key === "ArrowLeft") prev?.click();
-      if (event.key === "ArrowRight") next?.click();
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.target instanceof HTMLElement && event.target.closest("input, textarea, select, button, a, [contenteditable='true']")) return;
+
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp" || (event.code === "Space" && event.shiftKey)) {
+        event.preventDefault();
+        showPrevious();
+      } else if (event.key === "ArrowRight" || event.key === "ArrowDown" || event.code === "Space") {
+        event.preventDefault();
+        showNext();
+      }
     });
     renderMeme();
   }

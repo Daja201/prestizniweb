@@ -106,6 +106,24 @@ def test_feed_cursor_and_hidden_deleted_visibility(client, db, make_user, login)
     assert client.get(f"/memes/{deleted.id}").status_code == 404
 
 
+def test_feed_sort_recent_and_popular_and_no_class_filter(client, db, make_user, login) -> None:
+    author = make_user()
+    viewer = make_user()
+    popular_old = _add_meme(db, author.id, "popular older meme")
+    recent_new = _add_meme(db, author.id, "recent newer meme")
+    popular_old.likes_count = 12
+    recent_new.likes_count = 1
+    db.commit()
+    login(client, viewer)
+
+    recent_page = client.get("/memes?sort=new")
+    assert recent_page.text.index("recent newer meme") < recent_page.text.index("popular older meme")
+    assert 'name="class"' not in recent_page.text
+
+    popular_page = client.get("/memes?sort=popular")
+    assert popular_page.text.index("popular older meme") < popular_page.text.index("recent newer meme")
+
+
 def test_hidden_meme_is_available_to_admin(client, db, make_user, login) -> None:
     author = make_user()
     moderator = make_user(role="admin")

@@ -1,22 +1,22 @@
 {% extends "base.html" %}
 {% block title %}Memes{% endblock %}
-{% block head_extra %}<link rel="stylesheet" href="/static/css/memes.css">{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="/static/css/memes.css?v=meme-feed-layout-2">{% endblock %}
 {% block content %}
 <section class="stack meme-feed">
   <header class="page-heading row"><h1>MEMES</h1><a class="btn btn-primary" href="/memes/new">ADD MEME</a></header>
   <form class="meme-filters row" method="get" action="/memes">
     <label class="form-field"><span>Tag</span><input class="input" name="tag" value="{{ tag }}" placeholder="tag"></label>
-    <label class="form-field"><span>Class</span><select class="select" name="class"><option value="">All</option>{% for school_class in classes %}<option value="{{ school_class.slug }}" {% if class_slug == school_class.slug %}selected{% endif %}>{{ school_class.name }}</option>{% endfor %}</select></label>
+    <label class="form-field"><span>Order</span><select class="select" name="sort"><option value="new" {% if sort == 'new' %}selected{% endif %}>Newest</option><option value="popular" {% if sort == 'popular' %}selected{% endif %}>Most liked</option></select></label>
     <button class="btn btn-primary" type="submit">FILTER</button>
-    {% if tag or class_slug %}<a class="btn btn-ghost" href="/memes">RESET</a>{% endif %}
+    {% if tag or class_slug or sort != 'new' %}<a class="btn btn-ghost" href="/memes">RESET</a>{% endif %}
   </form>
   <div id="meme-grid" class="meme-grid">
     {% include "memes/_items.html" %}
   </div>
-  <div class="row meme-pager" data-meme-pager>
-    <button class="btn btn-ghost" type="button" data-meme-prev>←</button>
-    <span class="muted" data-meme-counter>1 / 1</span>
-    <button class="btn btn-ghost" type="button" data-meme-next>→</button>
+  <div class="row meme-pager" data-meme-pager aria-label="Meme navigation">
+    <button class="btn btn-ghost" type="button" data-meme-prev aria-label="Previous meme">←</button>
+    <span class="muted" data-meme-counter aria-live="polite">1 / 1</span>
+    <button class="btn btn-ghost" type="button" data-meme-next aria-label="Next meme">→</button>
   </div>
 </section>
 {% endblock %}

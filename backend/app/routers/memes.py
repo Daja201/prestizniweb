@@ -54,7 +54,7 @@ def _get_meme(db: Session, meme_id: int, user: User) -> Meme | None:
     return meme
 
 
-def _feed_url(before: int | None, tag: str | None, class_slug: str | None, limit: int) -> str | None:
+def _feed_url(before: int | None, tag: str | None, class_slug: str | None, sort: str, limit: int) -> str | None:
     if before is None:
         return None
     params: list[tuple[str, str]] = [("before", str(before)), ("limit", str(limit))]
@@ -62,17 +62,17 @@ def _feed_url(before: int | None, tag: str | None, class_slug: str | None, limit
         params.append(("tag", tag))
     if class_slug:
         params.append(("class", class_slug))
+    if sort != "new":
+        params.append(("sort", sort))
     return "/memes?" + urlencode(params)
 
 
-def _feed_data(db: Session, user: User, tag: str | None, class_slug: str | None, before: int | None, limit: int):
+def _feed_data(db: Session, user: User, tag: str | None, class_slug: str | None, sort: str, before: int | None, limit: int):
     statuses = ["visible", "hidden"] if _can_open_hidden(user) else ["visible"]
     statement = (
         select(Meme)
         .options(selectinload(Meme.author), selectinload(Meme.tags))
         .where(Meme.status.in_(statuses))
-        .order_by(desc(Meme.id))
-        .limit(limit + 1)
     )
     if before is not None:
         statement = statement.where(Meme.id < before)
@@ -83,10 +83,15 @@ def _feed_data(db: Session, user: User, tag: str | None, class_slug: str | None,
             SchoolClass.slug == class_slug,
             SchoolClass.status == "active",
         )
+    if sort == "popular":
+        statement = statement.order_by(desc(Meme.likes_count), desc(Meme.id))
+    else:
+        statement = statement.order_by(desc(Meme.created_at), desc(Meme.id))
+    statement = statement.limit(limit + 1)
     rows = list(db.scalars(statement).all())
     has_more = len(rows) > limit
     memes = rows[:limit]
-    next_url = _feed_url(memes[-1].id, tag, class_slug, limit) if has_more and memes else None
+    next_url = _feed_url(memes[-1].id, tag, class_slug, sort, limit) if has_more and memes else None
     voted_ids = set()
     if memes:
         voted_ids = set(db.scalars(
@@ -107,15 +112,16 @@ def list_memes(
     limit: int = Query(24, ge=1, le=60),
     tag: str | None = Query(None, max_length=30),
     class_filter: str | None = Query(None, alias="class", max_length=40),
+    sort: str = Query("new", max_length=20),
 ):
     tag_name = tag.strip().lower() if tag and tag.strip() else None
     class_slug = class_filter.strip() if class_filter and class_filter.strip() else None
-    memes, voted_ids, next_url = _feed_data(db, user, tag_name, class_slug, before, limit)
-    context = {"memes": memes, "voted_ids": voted_ids, "next_url": next_url, "tag": tag_name or "", "class_slug": class_slug or ""}
+    sort = sort if sort in {"new", "popular"} else "new"
+    memes, voted_ids, next_url = _feed_data(db, user, tag_name, class_slug, sort, before, limit)
+    context = {"memes": memes, "voted_ids": voted_ids, "next_url": next_url, "tag": tag_name or "", "class_slug": class_slug or "", "sort": sort}
     if request.headers.get("HX-Request") == "true":
         return render(request, "memes/_items.html", **context)
-    classes = list(db.scalars(select(SchoolClass).where(SchoolClass.status == "active").order_by(SchoolClass.name)).all())
-    return render(request, "memes/feed.html", classes=classes, **context)
+    return render(request, "memes/feed.html", **context)
 
 
 @router.get("/memes/new", response_class=HTMLResponse)

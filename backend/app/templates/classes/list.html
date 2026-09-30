@@ -1,9 +1,9 @@
 <!-- Class profile listing. -->
 {% extends "base.html" %}
-{% block title %}Třídy{% endblock %}
+{% block title %}CLASSES{% endblock %}
 {% block content %}
 <div class="container stack">
-  <div class="row"><h1>Třídy</h1><a class="btn btn-primary" href="/classes/new">Založit profil třídy</a></div>
+  <div class="row"><h1>CLASSES</h1><a class="btn btn-primary" href="/classes/new">Založit profil třídy</a></div>
   <div class="grid">
     {% for item in classes %}
     <article class="card stack"><h2><a href="/c/{{ item.slug }}">{{ item.name }}</a></h2><span class="muted">{{ member_counts.get(item.id, 0) }} členů</span></article>

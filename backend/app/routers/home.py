@@ -1,6 +1,6 @@
 # Serves the public landing page and the signed-in home dashboard.
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session, selectinload
 
@@ -19,7 +19,7 @@ def home(
     user: User | None = Depends(current_user),
 ):
     if user is None:
-        return render(request, "home.html")
+        return RedirectResponse("/login", status_code=303)
 
     memes = list(
         db.scalars(

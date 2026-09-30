@@ -52,6 +52,8 @@ class Meme(Base):
         CheckConstraint("status in ('visible','hidden','deleted')", name="ck_memes_status"),
         Index("ix_memes_status_id", "status", text("id DESC")),
         Index("ix_memes_class_id", "class_id"),
+        Index("ix_memes_status_created_at_id", "status", text("created_at DESC"), text("id DESC")),
+        Index("ix_memes_status_likes_id", "status", text("likes_count DESC"), text("id DESC")),
         CheckConstraint("width > 0", name="ck_memes_width"),
         CheckConstraint("height > 0", name="ck_memes_height"),
         CheckConstraint("likes_count >= 0", name="ck_memes_likes_count"),
