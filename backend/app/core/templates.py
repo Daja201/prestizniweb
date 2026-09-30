@@ -13,8 +13,8 @@ from app.core.flash import _COOKIE
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 
 _MONTHS_CS = [
-    "ledna", "února", "března", "dubna", "května", "června",
-    "července", "srpna", "září", "října", "listopadu", "prosince",
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
 ]
 
 
@@ -39,7 +39,7 @@ def _plural_cs(n: int, one: str, few: str, many: str) -> str:
 
 
 def timeago(dt: datetime | None) -> str:
-    """Relative Czech time, e.g. 'před 5 minutami', with correct plural forms."""
+    """Relative English time, e.g. '5 minutes ago'."""
     if dt is None:
         return ""
     now = datetime.now(timezone.utc)
@@ -47,23 +47,23 @@ def timeago(dt: datetime | None) -> str:
     seconds = int((now - reference).total_seconds())
 
     if seconds < 10:
-        return "právě teď"
+        return "just now"
     if seconds < 60:
-        return f"před {seconds} {_plural_cs(seconds, 'sekundou', 'sekundami', 'sekundami')}"
+        return f"{seconds} second{'s' if seconds != 1 else ''} ago"
     minutes = seconds // 60
     if minutes < 60:
-        return f"před {minutes} {_plural_cs(minutes, 'minutou', 'minutami', 'minutami')}"
+        return f"{minutes} minute{'s' if minutes != 1 else ''} ago"
     hours = minutes // 60
     if hours < 24:
-        return f"před {hours} {_plural_cs(hours, 'hodinou', 'hodinami', 'hodinami')}"
+        return f"{hours} hour{'s' if hours != 1 else ''} ago"
     days = hours // 24
     if days < 30:
-        return f"před {days} {_plural_cs(days, 'dnem', 'dny', 'dny')}"
+        return f"{days} day{'s' if days != 1 else ''} ago"
     months = days // 30
     if months < 12:
-        return f"před {months} {_plural_cs(months, 'měsícem', 'měsíci', 'měsíci')}"
+        return f"{months} month{'s' if months != 1 else ''} ago"
     years = days // 365
-    return f"před {years} {_plural_cs(years, 'rokem', 'lety', 'lety')}"
+    return f"{years} year{'s' if years != 1 else ''} ago"
 
 
 def media_url(rel_path: str | None) -> str:

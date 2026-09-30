@@ -118,7 +118,7 @@ def _record_local_fallback(name: str, subject: str, limit: int, seconds: int) ->
         while window and window[0] <= cutoff:
             window.popleft()
         if len(window) >= limit:
-            raise HTTPException(status_code=429, detail="Příliš mnoho požadavků. Zkuste to znovu za chvíli.")
+            raise HTTPException(status_code=429, detail="Too many requests. Please try again shortly.")
         window.append(now)
 
 
@@ -155,7 +155,7 @@ def rate_limit(
             retry_after = max(1, math.ceil((blocked_until - datetime.now(timezone.utc)).total_seconds()))
             raise HTTPException(
                 status_code=429,
-                detail="Příliš mnoho požadavků. Zkuste to znovu za chvíli.",
+                detail="Too many requests. Please try again shortly.",
                 headers={"Retry-After": str(retry_after)},
             )
 

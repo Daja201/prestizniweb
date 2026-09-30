@@ -1,20 +1,20 @@
-{# Potvrzovací stránka pro magic link – token se nespotřebuje při GET (ochrana před Safe Links) #}
+{# Confirmation page for magic link – token is not consumed on GET (protection against Safe Links) #}
 {% extends "base.html" %}
-{% block title %}Potvrdit přihlášení{% endblock %}
+{% block title %}Confirm sign-in{% endblock %}
 
 {% block content %}
 <div class="container stack auth-page">
-  <h1>Potvrdit přihlášení</h1>
-  <p>Klikni na tlačítko níže pro dokončení přihlášení.</p>
+  <h1>Confirm sign-in</h1>
+  <p>Click the button below to complete sign-in.</p>
 
   <div class="card">
     <form method="post" action="/auth/verify">
       <input type="hidden" name="token" value="{{ token | e }}">
       <input type="hidden" name="next" value="{{ next | default('/') }}">
-      <button class="btn btn-primary" type="submit">Přihlásit se</button>
+      <button class="btn btn-primary" type="submit">Sign in</button>
     </form>
   </div>
 
-  <p class="muted">Pokud ses o přihlášení nepokusil(a), tento odkaz ignoruj.</p>
+  <p class="muted">If you did not attempt to sign in, ignore this link.</p>
 </div>
 {% endblock %}

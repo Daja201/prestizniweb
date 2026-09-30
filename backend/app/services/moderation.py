@@ -41,11 +41,11 @@ def set_status(
     """Validate and change a moderation target status in the current transaction."""
     spec = TARGETS.get(target_type)
     if spec is None:
-        raise ValueError("Neplatný typ cíle.")
+        raise ValueError("Invalid target type.")
     if status not in spec[1]:
-        raise ValueError("Neplatný stav cíle.")
+        raise ValueError("Invalid target state.")
     target = get_target(db, target_type, target_id)
     if target is None:
-        raise LookupError("Cíl nebyl nalezen.")
+        raise LookupError("Target not found.")
     target.status = status
     log(db, actor_id, "set_status", target_type, target_id, {"status": status, "reason": reason})

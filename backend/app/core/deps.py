@@ -67,5 +67,5 @@ def _redirect_to_login(request: Request) -> None:
 def _forbidden(request: Request):
     from fastapi import HTTPException
     if request.headers.get("HX-Request"):
-        return HTTPException(status_code=403, detail="Přístup odmítnut.")
+        return HTTPException(status_code=403, detail="Access denied.")
     return HTTPException(status_code=403)

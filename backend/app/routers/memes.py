@@ -31,11 +31,11 @@ def _parse_tags(raw: str) -> list[str]:
         if not value:
             continue
         if not _TAG_RE.fullmatch(value):
-            raise ValueError("Štítek může obsahovat písmena, čísla, pomlčku a podtržítko (2–30 znaků).")
+            raise ValueError("Tag may contain letters, numbers, hyphens and underscores (2–30 characters).")
         if value not in result:
             result.append(value)
     if len(result) > 5:
-        raise ValueError("Lze přidat nejvýše 5 štítků.")
+        raise ValueError("You can add at most 5 tags.")
     return result
 
 
@@ -148,7 +148,7 @@ def create_meme(
     clean_caption = caption.strip()
     try:
         if len(clean_caption) > 300:
-            raise ValueError("Popisek může mít nejvýše 300 znaků.")
+            raise ValueError("Caption may be at most 300 characters.")
         tag_names = _parse_tags(tags)
         processed = process_image(image.file.read(settings.max_image_mb * 1024 * 1024 + 1))
         parsed_class_id = int(class_id) if class_id.strip() else None
@@ -164,7 +164,7 @@ def create_meme(
                 )
             )
             if class_allowed is None:
-                raise ValueError("Třída musí být aktivní a musíte být schváleným členem.")
+                raise ValueError("The class must be active and you must be an approved member.")
     except (ValueError, OSError) as exc:
         classes = list(db.scalars(
             select(SchoolClass)
@@ -206,7 +206,7 @@ def create_meme(
         raise
 
     response = RedirectResponse(f"/memes/{meme.id}", status_code=303)
-    flash(response, "Meme bylo přidáno.", "success")
+    flash(response, "Meme has been added.", "success")
     return response
 
 
@@ -266,7 +266,7 @@ def delete_meme(
     meme = db.scalar(select(Meme).where(Meme.id == meme_id, Meme.status != "deleted"))
     if meme is None or meme.author_id != user.id:
         response = RedirectResponse("/memes", status_code=303)
-        flash(response, "Meme nebylo nalezeno nebo je nemůžete odstranit.", "error")
+        flash(response, "Meme not found or you cannot delete it.", "error")
         return response
     image_path, thumb_path = meme.image_path, meme.thumb_path
     meme.status = "deleted"
@@ -274,5 +274,5 @@ def delete_meme(
     delete_storage(image_path)
     delete_storage(thumb_path)
     response = RedirectResponse("/memes", status_code=303)
-    flash(response, "Meme bylo odstraněno.", "success")
+    flash(response, "Meme has been deleted.", "success")
     return response

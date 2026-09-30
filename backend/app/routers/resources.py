@@ -25,26 +25,34 @@ from app.models import ClassMember, Resource, ResourceVote, SchoolClass, Tag, Us
 
 router = APIRouter()
 
-SUBJECTS = [
-    "Matematika",
-    "Český jazyk",
-    "Anglický jazyk",
-    "Programování",
-    "Elektrotechnika",
-    "Počítačové sítě",
-    "Operační systémy",
-    "Databáze",
-    "Webové aplikace",
-    "Fyzika",
-    "Ostatní",
+[
+    "English Language",
+    "Chemistry and Ecology",
+    "History",
+    "Physics",
+    "Office Applications",
+    "Mathematics",
+    "Math Exercises",
+    "Mechatronics",
+    "Operating Systems",
+    "Computer Graphics",
+    "Programming",
+    "Network Technologies",
+    "Computer Hardware",
+    "Physical Education",
+    "Web Applications",
+    "Czech Language and Literature",
+    "Other",
 ]
+
 KINDS = {
-    "notes": "Poznámky",
+    "notes": "Notes",
     "test": "Test",
-    "exercises": "Cvičení",
+    "exercises": "Exercises",
     "link": "Odkaz",
-    "other": "Ostatní",
+    "other": "Other",
 }
+
 ALLOWED_EXTENSIONS = {
     "pdf",
     "docx",
@@ -94,12 +102,12 @@ def _parse_tags(raw: str) -> list[str]:
         if not normalized:
             continue
         if len(normalized) > 30:
-            raise UploadValidationError("Každý štítek může mít nejvýše 30 znaků.")
+            raise UploadValidationError("Each tag can be at most 30 characters.")
         if normalized not in seen:
             tags.append(normalized)
             seen.add(normalized)
     if len(tags) > 5:
-        raise UploadValidationError("Lze přidat nejvýše 5 štítků.")
+        raise UploadValidationError("Up to 5 tags allowed.")
     return tags
 
 
@@ -159,7 +167,7 @@ def _is_zip_of_expected_type(data: bytes, extension: str) -> bool:
 
 def _sniff_upload(data: bytes, extension: str) -> None:
     if not data:
-        raise UploadValidationError("Soubor je prázdný.")
+        raise UploadValidationError("File is empty.")
     if extension == "pdf" and data.startswith(b"%PDF"):
         return
     if extension == "png" and data.startswith(b"\x89PNG\r\n\x1a\n"):
@@ -174,26 +182,26 @@ def _sniff_upload(data: bytes, extension: str) -> None:
         return
     if extension in {"txt", "md"}:
         if data.startswith(b"PK") or b"\x00" in data:
-            raise UploadValidationError("Textový soubor obsahuje nepovolená binární data.")
+            raise UploadValidationError("Text file contains disallowed binary data.")
         try:
             data.decode("utf-8")
         except UnicodeDecodeError as exc:
-            raise UploadValidationError("Textový soubor musí být v UTF-8.") from exc
+            raise UploadValidationError("Text file must be UTF-8 encoded.") from exc
         if _looks_like_html_or_script(data):
-            raise UploadValidationError("HTML, SVG a skripty nejsou povolené.")
+            raise UploadValidationError("HTML, SVG and scripts are not allowed.")
         return
-    raise UploadValidationError("Obsah souboru neodpovídá zvolené příponě.")
+    raise UploadValidationError("File content does not match its extension.")
 
 
 def _validate_url(value: str) -> str:
     clean = value.strip()
     if len(clean) > 500:
-        raise ValueError("Odkaz může mít nejvýše 500 znaků.")
+        raise ValueError("URL can be at most 500 characters.")
     parsed = urlsplit(clean)
     if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc or parsed.username or parsed.password:
-        raise ValueError("Povolené jsou pouze odkazy http:// nebo https://.")
+        raise ValueError("Only http:// or https:// links are allowed.")
     if any(ord(ch) < 32 for ch in clean):
-        raise ValueError("Odkaz obsahuje nepovolené znaky.")
+        raise ValueError("URL contains invalid characters.")
     return clean
 
 
@@ -443,7 +451,7 @@ def create_resource(
     tags: str = Form(""),
     class_id: str = Form(""),
     url: str = Form(""),
-    file: UploadFile | None = File(None),
+    files: list[UploadFile] = File(default=[]),
     db: Session = Depends(get_db),
     user: User = Depends(require_user),
 ):
@@ -456,39 +464,39 @@ def create_resource(
         "tags": tags,
         "class_id": class_id,
         "url": url,
-        "file_name": file.filename if file else "",
+        "file_name": files[0].filename if files else "",
     }
     errors: dict[str, str] = {}
     clean_title = title.strip()
     clean_description = description.strip()
     if not 3 <= len(clean_title) <= 120:
-        errors["title"] = "Název musí mít 3 až 120 znaků."
+        errors["title"] = "Title must be 3 to 120 characters."
     if len(clean_description) > 1000:
-        errors["description"] = "Popis může mít nejvýše 1000 znaků."
+        errors["description"] = "Description can be at most 1000 characters."
     if subject not in SUBJECTS:
-        errors["subject"] = "Vyberte platný předmět."
+        errors["subject"] = "Please select a valid subject."
     if kind not in KINDS:
-        errors["kind"] = "Vyberte platný typ materiálu."
+        errors["kind"] = "Please select a valid type."
 
     parsed_year: int | None = None
     if school_year.strip():
         try:
             parsed_year = int(school_year)
         except ValueError:
-            errors["school_year"] = "Ročník musí být číslo 1 až 4."
+            errors["school_year"] = "Year must be a number 1–4."
         else:
             if parsed_year not in range(1, 5):
-                errors["school_year"] = "Ročník musí být 1 až 4."
+                errors["school_year"] = "Year must be 1–4."
 
     parsed_class_id: int | None = None
     if class_id.strip():
         try:
             parsed_class_id = int(class_id)
         except ValueError:
-            errors["class_id"] = "Vyberte platnou třídu."
+            errors["class_id"] = "Please select a valid class."
         else:
             if parsed_class_id <= 0 or _valid_class_for_user(db, parsed_class_id, user.id) is None:
-                errors["class_id"] = "Třída musí být aktivní a musíte být schváleným členem."
+                errors["class_id"] = "Class must be active and you must be an approved member."
 
     try:
         tag_names = _parse_tags(tags)
@@ -498,23 +506,28 @@ def create_resource(
 
     clean_url = url.strip()
     has_url = bool(clean_url)
-    has_file = file is not None and bool(file.filename)
-    if has_url == has_file:
-        errors["source"] = "Přidejte právě jeden odkaz nebo soubor."
+    valid_files = [f for f in files if f and f.filename]
+    has_file = bool(valid_files)
+    if not has_url and not has_file:
+        errors["source"] = "Please provide a URL or upload at least one file."
+    if has_url and has_file:
+        errors["source"] = "Please provide either a URL or files, not both."
 
+    # Validate first file for single-resource URL path; multi-file handled below
     file_data: bytes | None = None
     file_extension: str | None = None
     clean_file_name: str | None = None
-    if has_file and file is not None:
-        original_name = file.filename or "soubor"
+    if has_file and not has_url and valid_files:
+        first_file = valid_files[0]
+        original_name = first_file.filename or "file"
         suffix = PurePosixPath(original_name).suffix.lower().lstrip(".")
         if suffix not in ALLOWED_EXTENSIONS:
-            errors["file"] = "Tento typ souboru není povolený."
+            errors["file"] = f"File type '.{suffix}' is not allowed."
         else:
             max_bytes = settings.max_resource_mb * 1024 * 1024
-            file_data = file.file.read(max_bytes + 1)
+            file_data = first_file.file.read(max_bytes + 1)
             if len(file_data) > max_bytes:
-                errors["file"] = f"Soubor může mít nejvýše {settings.max_resource_mb} MB."
+                errors["file"] = f"File can be at most {settings.max_resource_mb} MB."
             else:
                 try:
                     _sniff_upload(file_data, suffix)
@@ -542,37 +555,78 @@ def create_resource(
             **_load_resource_form_data(db, user),
         )
 
-    resource = Resource(
-        author_id=user.id,
-        class_id=parsed_class_id,
-        title=clean_title,
-        description=clean_description,
-        subject=subject,
-        school_year=parsed_year,
-        kind=kind,
-        url=clean_url if has_url else None,
-        file_path=None,
-        file_name=None,
-        file_size=None,
-        file_mime=None,
-        status="visible",
-    )
-    db.add(resource)
-    db.flush()
+    last_resource_id: int | None = None
+    created_count = 0
 
-    if has_file and file_data is not None and file_extension and clean_file_name:
-        relative_path = save_bytes("resources", file_data, file_extension)
-        resource.file_path = relative_path
-        resource.file_name = clean_file_name
-        resource.file_size = len(file_data)
-        resource.file_mime = MEDIA_TYPES[file_extension]
+    # If URL, create a single resource
+    if has_url:
+        resource = Resource(
+            author_id=user.id,
+            class_id=parsed_class_id,
+            title=clean_title,
+            description=clean_description,
+            subject=subject,
+            school_year=parsed_year,
+            kind=kind,
+            url=clean_url,
+            file_path=None,
+            file_name=None,
+            file_size=None,
+            file_mime=None,
+            status="visible",
+        )
+        db.add(resource)
+        db.flush()
+        resource.tags = _sync_tags(db, tag_names)
+        db.commit()
+        last_resource_id = resource.id
+        created_count = 1
+    else:
+        # Multiple file upload: create one resource per file
+        for upload_file in valid_files:
+            orig_name = upload_file.filename or "file"
+            suffix = PurePosixPath(orig_name).suffix.lower().lstrip(".")
+            if suffix not in ALLOWED_EXTENSIONS:
+                continue
+            max_bytes = settings.max_resource_mb * 1024 * 1024
+            data = upload_file.file.read(max_bytes + 1)
+            if len(data) > max_bytes:
+                continue
+            try:
+                _sniff_upload(data, suffix)
+            except UploadValidationError:
+                continue
+            safe_name = _sanitize_file_name(orig_name, suffix)
+            relative_path = save_bytes("resources", data, suffix)
+            resource = Resource(
+                author_id=user.id,
+                class_id=parsed_class_id,
+                title=clean_title if len(valid_files) == 1 else f"{clean_title} — {safe_name}",
+                description=clean_description,
+                subject=subject,
+                school_year=parsed_year,
+                kind=kind,
+                url=None,
+                file_path=relative_path,
+                file_name=safe_name,
+                file_size=len(data),
+                file_mime=MEDIA_TYPES.get(suffix, "application/octet-stream"),
+                status="visible",
+            )
+            db.add(resource)
+            db.flush()
+            resource.tags = _sync_tags(db, tag_names)
+            db.commit()
+            last_resource_id = resource.id
+            created_count += 1
 
-    resource_tags = _sync_tags(db, tag_names)
-    resource.tags = resource_tags
-    db.commit()
+    if created_count == 0:
+        errors["source"] = "No valid files could be processed."
+        return render(request, "resources/new.html", 422, subjects=SUBJECTS, kinds=KINDS, form=form, errors=errors, **_load_resource_form_data(db, user))
 
-    response = RedirectResponse(f"/resources/{resource.id}", status_code=303)
-    flash(response, "Studijní materiál byl přidán.", "success")
+    redirect_to = f"/resources/{last_resource_id}" if created_count == 1 else "/resources"
+    response = RedirectResponse(redirect_to, status_code=303)
+    flash(response, f"{created_count} material(s) uploaded.", "success")
     return response
 
 
@@ -688,11 +742,11 @@ def delete_resource(
     resource = db.scalar(select(Resource).where(Resource.id == resource_id))
     if resource is None or resource.status == "deleted":
         response = RedirectResponse("/resources", status_code=303)
-        flash(response, "Materiál nebyl nalezen.", "error")
+        flash(response, "Material not found.", "error")
         return response
     if resource.author_id != user.id:
         response = RedirectResponse(f"/resources/{resource.id}", status_code=303)
-        flash(response, "Tento materiál můžete odstranit jen vy.", "error")
+        flash(response, "You can only delete your own materials.", "error")
         return response
 
     old_path = resource.file_path
@@ -700,5 +754,5 @@ def delete_resource(
     db.commit()
     delete_storage(old_path)
     response = RedirectResponse("/resources", status_code=303)
-    flash(response, "Materiál byl odstraněn.", "success")
+    flash(response, "Material deleted.", "success")
     return response

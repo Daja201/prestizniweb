@@ -138,7 +138,7 @@ def _validate_email_address(email: str) -> str:
         info = validate_email(email, check_deliverability=False)
         return info.normalized.lower()
     except EmailNotValidError:
-        raise ValueError("Neplatná e-mailová adresa.")
+        raise ValueError("Invalid email address.")
 
 
 def _get_or_create_user(db: Session, email: str) -> User:
@@ -206,7 +206,7 @@ class _AuthMiddleware:
                     allowed = urlparse(settings.base_url)
                     if parsed.netloc != allowed.netloc:
                         response = StarletteResponse(
-                            "Zakázaný přístup (CSRF).", status_code=403
+                            "Forbidden access (CSRF).", status_code=403
                         )
                         await response(scope, receive, send)
                         return
@@ -227,7 +227,7 @@ def setup(app: FastAPI) -> None:
             return Response(status_code=401, headers={"HX-Redirect": exc.headers["HX-Redirect"]})
         if exc.status_code == 403:
             if request.headers.get("HX-Request") == "true" or "text/html" not in request.headers.get("accept", "text/html"):
-                return PlainTextResponse("Přístup odepřen.", status_code=403)
+                return PlainTextResponse("Access denied.", status_code=403)
             return render(request, "errors/403.html", status_code=403)
         if exc.status_code == 404:
             if request.headers.get("HX-Request") == "true" or "text/html" not in request.headers.get("accept", "text/html"):
@@ -235,10 +235,10 @@ def setup(app: FastAPI) -> None:
             return render(request, "errors/404.html", status_code=404)
         if exc.status_code == 429:
             if request.headers.get("HX-Request") == "true" or "text/html" not in request.headers.get("accept", "text/html"):
-                return PlainTextResponse(exc.detail or "Příliš mnoho požadavků.", status_code=429)
+                return PlainTextResponse(exc.detail or "Too many requests.", status_code=429)
             return render(
                 request, "errors/500.html", status_code=429,
-                error_message=exc.detail or "Příliš mnoho požadavků."
+                error_message=exc.detail or "Too many requests."
             )
         raise exc
 
@@ -417,18 +417,18 @@ def code_post(request: Request, db: Session = Depends(get_db)):
         .first()
     )
     if lt is None:
-        resp = render(request, "auth/check_email.html", next=next_path, error="Neplatný nebo expirovaný kód.")
+        resp = render(request, "auth/check_email.html", next=next_path, error="Invalid or expired code.")
         return resp
 
     lt.attempts += 1
     if lt.attempts > _MAX_CODE_ATTEMPTS:
         lt.used_at = now
         db.commit()
-        return render(request, "auth/login.html", error="Příliš mnoho pokusů. Vyžádej nový odkaz.", next=next_path)
+        return render(request, "auth/login.html", error="Too many attempts. Request a new link.", next=next_path)
 
     if not hmac.compare_digest(_hmac(code), lt.code_hash):
         db.commit()
-        return render(request, "auth/check_email.html", next=next_path, error=f"Špatný kód. Zbývá pokusů: {_MAX_CODE_ATTEMPTS - lt.attempts}.")
+        return render(request, "auth/check_email.html", next=next_path, error=f"Wrong code. Attempts remaining: {_MAX_CODE_ATTEMPTS - lt.attempts}.")
 
     lt.used_at = now
     db.commit()
@@ -449,7 +449,7 @@ def _consume_token(request: Request, db: Session, raw_token: str, next_path: str
         .first()
     )
     if lt is None:
-        resp = render(request, "auth/login.html", error="Odkaz je neplatný nebo expiroval. Vyžádej nový.")
+        resp = render(request, "auth/login.html", error="Link is invalid or expired. Request a new one.")
         return resp
 
     lt.used_at = now
@@ -461,7 +461,7 @@ def _finish_login(request: Request, db: Session, email: str, next_path: str):
     user = _get_or_create_user(db, email)
     if user.status in ("banned", "deleted"):
         db.commit()
-        return render(request, "auth/login.html", error="Přihlášení není možné. Účet byl zablokován nebo smazán.")
+        return render(request, "auth/login.html", error="Login is not possible. Account has been blocked or deleted.")
 
     user.last_login_at = datetime.now(timezone.utc)
     db.commit()
@@ -543,16 +543,16 @@ def me_post(request: Request, db: Session = Depends(get_db), user: User = Depend
 
     # Validate: 2-60 chars, no control characters
     if not (2 <= len(display_name) <= 60):
-        return render(request, "auth/me.html", error="Jméno musí mít 2–60 znaků.")
+        return render(request, "auth/me.html", error="Name must be 2–60 characters.")
     if any(unicodedata.category(c).startswith("C") for c in display_name):
-        return render(request, "auth/me.html", error="Jméno obsahuje nepovoluné znaky.")
+        return render(request, "auth/me.html", error="Name contains invalid characters.")
 
     if avatar not in {"circle", "square"}:
-        return render(request, "auth/me.html", error="Neplatný profilový symbol.")
+        return render(request, "auth/me.html", error="Invalid profile symbol.")
     if avatar_character is not None and (
         len(avatar_character) != 1 or not 32 <= ord(avatar_character) <= 126
     ):
-        return render(request, "auth/me.html", error="Znak avatara musí být jeden tisknutelný znak ASCII.")
+        return render(request, "auth/me.html", error="Avatar character must be a single printable ASCII character.")
 
     from app.core.storage import save_bytes, delete as storage_delete
     from app.services.images import process_avatar_image
@@ -561,7 +561,7 @@ def me_post(request: Request, db: Session = Depends(get_db), user: User = Depend
     if profile_user is None:
         return RedirectResponse("/login", status_code=303)
     if avatar == "square" and profile_user.role not in {"admin", "super_admin"}:
-        return render(request, "auth/me.html", error="Čtvercový avatar je dostupný pouze administrátorům.")
+        return render(request, "auth/me.html", error="Square avatar is available only to administrators.")
 
     new_avatar_path = None
     if upload is not None and getattr(upload, "filename", ""):
@@ -612,7 +612,7 @@ def me_delete(request: Request, db: Session = Depends(get_db), user: User = Depe
 
     confirm = str(form.get("confirm", "")).strip()
     if confirm != "SMAZAT":
-        return render(request, "auth/me.html", error="Pro smazání účtu napiš SMAZAT.")
+        return render(request, "auth/me.html", error="To delete your account, type DELETE.")
 
     from app.models import Meme, Quote, Resource, ClassMember, MemeLike, QuoteVote, ResourceVote
     from app.core.storage import delete as storage_delete
@@ -659,7 +659,7 @@ def me_delete(request: Request, db: Session = Depends(get_db), user: User = Depe
     user.status = "deleted"
     user.deleted_at = now
     user.email = f"deleted-{user.id}@deleted.invalid"
-    user.display_name = "Smazaný uživatel"
+    user.display_name = "Deleted user"
 
     db.commit()
 

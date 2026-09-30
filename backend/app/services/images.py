@@ -28,20 +28,20 @@ _AVATAR_SIZE = 256
 def process_avatar_image(data: bytes) -> bytes:
     """Validate, strip metadata from, and square-crop a profile picture to a small WebP."""
     if not data:
-        raise ValueError("Obrázek je prázdný.")
+        raise ValueError("Image is empty.")
     if len(data) > settings.max_image_mb * 1024 * 1024:
-        raise ValueError(f"Obrázek může mít nejvýše {settings.max_image_mb} MB.")
+        raise ValueError(f"Image may be at most {settings.max_image_mb} MB.")
 
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
             with Image.open(io.BytesIO(data)) as probe:
                 if probe.format not in _ALLOWED_FORMATS:
-                    raise ValueError("Povolené jsou pouze obrázky JPEG, PNG, WebP nebo GIF.")
+                    raise ValueError("Only JPEG, PNG, WebP or GIF images are allowed.")
                 probe.verify()
             with Image.open(io.BytesIO(data)) as source:
                 if source.format not in _ALLOWED_FORMATS:
-                    raise ValueError("Povolené jsou pouze obrázky JPEG, PNG, WebP nebo GIF.")
+                    raise ValueError("Only JPEG, PNG, WebP or GIF images are allowed.")
                 source.seek(0)
                 image = ImageOps.exif_transpose(source.copy())
                 image = image.convert("RGB")
@@ -62,25 +62,25 @@ def process_avatar_image(data: bytes) -> bytes:
     except ValueError:
         raise
     except (UnidentifiedImageError, OSError, Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
-        raise ValueError("Soubor není platný nebo bezpečný obrázek.") from exc
+        raise ValueError("File is not a valid or safe image.") from exc
 
 
 def process_image(data: bytes) -> ProcessedImage:
     if not data:
-        raise ValueError("Obrázek je prázdný.")
+        raise ValueError("Image is empty.")
     if len(data) > settings.max_image_mb * 1024 * 1024:
-        raise ValueError(f"Obrázek může mít nejvýše {settings.max_image_mb} MB.")
+        raise ValueError(f"Image may be at most {settings.max_image_mb} MB.")
 
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
             with Image.open(io.BytesIO(data)) as probe:
                 if probe.format not in _ALLOWED_FORMATS:
-                    raise ValueError("Povolené jsou pouze obrázky JPEG, PNG, WebP nebo GIF.")
+                    raise ValueError("Only JPEG, PNG, WebP or GIF images are allowed.")
                 probe.verify()
             with Image.open(io.BytesIO(data)) as source:
                 if source.format not in _ALLOWED_FORMATS:
-                    raise ValueError("Povolené jsou pouze obrázky JPEG, PNG, WebP nebo GIF.")
+                    raise ValueError("Only JPEG, PNG, WebP or GIF images are allowed.")
                 source.seek(0)
                 image = ImageOps.exif_transpose(source.copy())
                 has_alpha = "A" in image.getbands() or "transparency" in image.info
@@ -101,4 +101,4 @@ def process_image(data: bytes) -> ProcessedImage:
     except ValueError:
         raise
     except (UnidentifiedImageError, OSError, Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
-        raise ValueError("Soubor není platný nebo bezpečný obrázek.") from exc
+        raise ValueError("File is not a valid or safe image.") from exc

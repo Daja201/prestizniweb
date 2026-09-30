@@ -1,31 +1,31 @@
 {# Provides the searchable, filterable quote feed. #}
 {% extends "base.html" %}
-{% block title %}Citáty{% endblock %}
+{% block title %}Quotes{% endblock %}
 {% block content %}
 <div class="container stack quotes-page">
   <div class="row page-header">
     <div>
-      <h1>Citáty</h1>
-      <p class="muted">Vtipné výroky studentů a učitelů.</p>
+      <h1>Quotes</h1>
+      <p class="muted">Funny quotes from students and teachers.</p>
     </div>
-    <a class="btn btn-primary" href="/quotes/new">Přidat citát</a>
+    <a class="btn btn-primary" href="/quotes/new">Add quote</a>
   </div>
 
   <form class="card row quote-filters" method="get" action="/quotes">
     <div class="form-field">
-      <label for="quote-q">Hledat</label>
-      <input class="input" id="quote-q" name="q" value="{{ q }}" placeholder="Text nebo kdo to řekl">
+      <label for="quote-q">Search</label>
+      <input class="input" id="quote-q" name="q" value="{{ q }}" placeholder="Text or who said it">
     </div>
     <div class="form-field">
-      <label for="quote-class">Třída</label>
+      <label for="quote-class">Class</label>
       <select class="select" id="quote-class" name="class">
-        <option value="">Všechny třídy</option>
+        <option value="">All classes</option>
         {% for item in classes %}
           <option value="{{ item.slug }}"{% if class_slug == item.slug %} selected{% endif %}>{{ item.name }}</option>
         {% endfor %}
       </select>
     </div>
-    <button class="btn btn-primary" type="submit">Hledat</button>
+    <button class="btn btn-primary" type="submit">Search</button>
   </form>
 
   <div id="quote-items" class="stack">

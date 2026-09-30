@@ -7,10 +7,10 @@
   {% if quote.context %}<p class="muted quote-context">{{ quote.context }}</p>{% endif %}
   <div class="row quote-meta">
     {% if quote.said_on %}<time datetime="{{ quote.said_on.isoformat() }}">{{ quote.said_on.strftime('%d. %m. %Y') }}</time>{% endif %}
-    <span class="muted">Přidal/a {{ quote.author.display_name }}</span>
+    <span class="muted">Added by {{ quote.author.display_name }}</span>
   </div>
   {% if quote.status == "pending" and quote.author_id == user.id %}
-    <span class="badge badge-warn">čeká na schválení</span>
+    <span class="badge badge-warn">pending approval</span>
   {% elif quote.status == "hidden" %}
     <span class="badge badge-warn">skryto</span>
   {% endif %}

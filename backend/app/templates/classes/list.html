@@ -1,13 +1,13 @@
 <!-- Class profile listing. -->
 {% extends "base.html" %}
-{% block title %}CLASSES{% endblock %}
+{% block title %}Classes{% endblock %}
 {% block content %}
 <div class="container stack">
-  <div class="row"><h1>CLASSES</h1><a class="btn btn-primary" href="/classes/new">Založit profil třídy</a></div>
+  <div class="row"><h1>Classes</h1><a class="btn btn-primary" href="/classes/new">Create class profile</a></div>
   <div class="grid">
     {% for item in classes %}
-    <article class="card stack"><h2><a href="/c/{{ item.slug }}">{{ item.name }}</a></h2><span class="muted">{{ member_counts.get(item.id, 0) }} členů</span></article>
-    {% else %}<div class="empty-state">Zatím nejsou žádné aktivní třídy.</div>{% endfor %}
+    <article class="card stack"><h2><a href="/c/{{ item.slug }}">{{ item.name }}</a></h2><span class="muted">{{ member_counts.get(item.id, 0) }} members</span></article>
+    {% else %}<div class="empty-state">No active classes yet.</div>{% endfor %}
   </div>
 </div>
 {% endblock %}

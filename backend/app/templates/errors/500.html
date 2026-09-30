@@ -1,2 +1,2 @@
 <!-- Friendly server-error page. -->
-{% extends "base.html" %}{% block title %}Chyba serveru{% endblock %}{% block content %}<section class="empty-state stack"><h1>Něco se pokazilo</h1><p>{{ error_message|default('Zkuste to prosím znovu později.') }}</p><a href="/">Zpět na úvod</a></section>{% endblock %}
+{% extends "base.html" %}{% block title %}Server error{% endblock %}{% block content %}<section class="empty-state stack"><h1>Something went wrong</h1><p>{{ error_message|default('Please try again later.') }}</p><a href="/">Back to home</a></section>{% endblock %}

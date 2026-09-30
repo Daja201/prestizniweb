@@ -52,15 +52,15 @@ def create_report(
 ):
     """Create a report and auto-hide content at the configured threshold."""
     if target_type not in TARGET_MODELS or reason not in REASONS:
-        return HTMLResponse("Neplatné údaje.", status_code=400)
+        return HTMLResponse("Invalid data.", status_code=400)
     details = details.strip()
     if len(details) > 500:
-        return HTMLResponse("Podrobnosti mohou mít nejvýše 500 znaků.", status_code=400)
+        return HTMLResponse("Details may be at most 500 characters.", status_code=400)
     target = _target(db, target_type, target_id)
     if target is None or getattr(target, "status", None) == "deleted":
         return HTMLResponse("Obsah nebyl nalezen.", status_code=404)
     if _author_id(target_type, target) == user.id:
-        return HTMLResponse("Vlastní obsah nelze nahlásit.", status_code=400)
+        return HTMLResponse("You cannot report your own content.", status_code=400)
 
     existing = db.scalar(
         select(Report).where(
@@ -70,7 +70,7 @@ def create_report(
         )
     )
     if existing:
-        return HTMLResponse("Už jsi nahlásil/a.", status_code=409)
+        return HTMLResponse("You have already reported this.", status_code=409)
 
     report = Report(
         reporter_id=user.id,
@@ -84,7 +84,7 @@ def create_report(
         db.flush()
     except IntegrityError:
         db.rollback()
-        return HTMLResponse("Už jsi nahlásil/a.", status_code=409)
+        return HTMLResponse("You have already reported this.", status_code=409)
 
     open_count = db.scalar(
         select(func.count(func.distinct(Report.reporter_id))).where(
@@ -99,4 +99,4 @@ def create_report(
             audit.log(db, user.id, "auto_hide", target_type, target_id, {"open_reports": open_count})
 
     db.commit()
-    return HTMLResponse("<div class=\"flash flash-success\">Děkujeme, moderátoři se na to podívají.</div>")
+    return HTMLResponse("<div class=\"flash flash-success\">Thank you, moderators will look into it.</div>")

@@ -2,7 +2,7 @@
 <form class="row" hx-post="/quotes/{{ quote.id }}/vote" hx-target="#quote-vote-{{ quote.id }}" hx-swap="outerHTML">
   <span id="quote-vote-{{ quote.id }}">
     <button class="btn{% if voted %} btn-primary{% else %} btn-ghost{% endif %}" type="submit" aria-pressed="{{ 'true' if voted else 'false' }}">
-      {% if voted %}▲ Hlasováno{% else %}▲ Hlas{% endif %} · {{ quote.votes_count }}
+      {% if voted %}▲ Voted{% else %}▲ Vote{% endif %} · {{ quote.votes_count }}
     </button>
   </span>
 </form>

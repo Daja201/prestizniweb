@@ -188,31 +188,31 @@ def create_quote(
     clean_said_by = said_by.strip()
     clean_context = context.strip()
     if not 2 <= len(clean_text) <= 400:
-        errors["text"] = "Citát musí mít 2 až 400 znaků."
+        errors["text"] = "Quote must be 2 to 400 characters."
     if not 1 <= len(clean_said_by) <= 80:
-        errors["said_by"] = "Autor výroku musí mít 1 až 80 znaků."
+        errors["said_by"] = "Speaker must be 1 to 80 characters."
     if len(clean_context) > 200:
-        errors["context"] = "Kontext může mít nejvýše 200 znaků."
+        errors["context"] = "Context may be at most 200 characters."
 
     parsed_date: date | None = None
     if said_on.strip():
         try:
             parsed_date = date.fromisoformat(said_on.strip())
         except ValueError:
-            errors["said_on"] = "Datum není platné."
+            errors["said_on"] = "Date is not valid."
         else:
             if parsed_date > date.today():
-                errors["said_on"] = "Datum nesmí být v budoucnosti."
+                errors["said_on"] = "Date must not be in the future."
 
     parsed_class_id: int | None = None
     if class_id.strip():
         try:
             parsed_class_id = int(class_id)
         except ValueError:
-            errors["class_id"] = "Vyberte platnou třídu."
+            errors["class_id"] = "Select a valid class."
         else:
             if parsed_class_id <= 0 or _valid_class_for_user(db, parsed_class_id, user.id) is None:
-                errors["class_id"] = "Třída musí být aktivní a musíte být schváleným členem."
+                errors["class_id"] = "The class must be active and you must be an approved member."
 
     if errors:
         return render(
@@ -239,9 +239,9 @@ def create_quote(
 
     response = RedirectResponse("/quotes", status_code=303)
     if status == "pending":
-        flash(response, "Citát byl odeslán a čeká na schválení.", "success")
+        flash(response, "Quote has been submitted and is awaiting approval.", "success")
     else:
-        flash(response, "Citát byl zveřejněn.", "success")
+        flash(response, "Quote has been published.", "success")
     return response
 
 
@@ -296,15 +296,15 @@ def delete_quote(
     quote = db.scalar(select(Quote).where(Quote.id == quote_id))
     if quote is None or quote.status == "deleted":
         response = RedirectResponse("/quotes", status_code=303)
-        flash(response, "Citát nebyl nalezen.", "error")
+        flash(response, "Quote not found.", "error")
         return response
     if quote.author_id != user.id:
         response = RedirectResponse("/quotes", status_code=303)
-        flash(response, "Tento citát můžete odstranit jen vy.", "error")
+        flash(response, "Only you can delete this quote.", "error")
         return response
 
     quote.status = "deleted"
     db.commit()
     response = RedirectResponse("/quotes", status_code=303)
-    flash(response, "Citát byl odstraněn.", "success")
+    flash(response, "Quote has been deleted.", "success")
     return response

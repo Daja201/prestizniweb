@@ -4,12 +4,12 @@
 {% block head_extra %}<link rel="stylesheet" href="/static/css/resources.css">{% endblock %}
 {% block content %}
 <div class="container stack narrow-page">
-  <a href="/resources">← Studijní materiály</a>
+  <a href="/resources">← Study materials</a>
   <article class="card stack resource-detail">
     <div class="row resource-card-header">
       <div class="pill">{{ resource.subject }}</div>
       <span class="badge">{{ kind_label }}</span>
-      {% if resource.school_year %}<span class="badge">{{ resource.school_year }}. ročník</span>{% endif %}
+      {% if resource.school_year %}<span class="badge">{{ resource.school_year }}. year</span>{% endif %}
       {% if resource.status == "hidden" %}<span class="badge badge-warn">skryto</span>{% endif %}
     </div>
     <h1>{{ resource.title }}</h1>
@@ -18,19 +18,19 @@
       {% for item in resource.tags %}<a class="pill" href="/resources?tag={{ item.name | urlencode }}">#{{ item.name }}</a>{% endfor %}
     </div>
     <div class="resource-details-grid">
-      <div><span class="muted">Předmět</span><strong>{{ resource.subject }}</strong></div>
+      <div><span class="muted">Subject</span><strong>{{ resource.subject }}</strong></div>
       <div><span class="muted">Autor</span><strong>{{ resource.author.display_name }}</strong></div>
-      <div><span class="muted">Přidáno</span><strong>{{ resource.created_at | cs_datetime }}</strong></div>
-      {% if resource.school_class %}<div><span class="muted">Třída</span><strong>{{ resource.school_class.name }}</strong></div>{% endif %}
+      <div><span class="muted">Added</span><strong>{{ resource.created_at | cs_datetime }}</strong></div>
+      {% if resource.school_class %}<div><span class="muted">Class</span><strong>{{ resource.school_class.name }}</strong></div>{% endif %}
     </div>
 
     <div class="row resource-detail-actions">
       {% include "resources/_vote_button.html" %}
       {{ report_button("resource", resource.id) }}
       {% if resource.file_path %}
-        <a class="btn btn-primary" href="/resources/{{ resource.id }}/download">Stáhnout{% if resource.file_name %} {{ resource.file_name }}{% endif %}</a>
+        <a class="btn btn-primary" href="/resources/{{ resource.id }}/download">Download{% if resource.file_name %} {{ resource.file_name }}{% endif %}</a>
       {% elif resource.url %}
-        <a class="btn btn-primary" href="{{ resource.url }}" target="_blank" rel="noopener noreferrer nofollow">Otevřít odkaz</a>
+        <a class="btn btn-primary" href="{{ resource.url }}" target="_blank" rel="noopener noreferrer nofollow">Open link</a>
         {% if resource_domain %}<span class="muted">{{ resource_domain }}</span>{% endif %}
       {% endif %}
       {% if resource.author_id == user.id %}

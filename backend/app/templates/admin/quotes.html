@@ -1,4 +1,4 @@
 <!-- Pending quote moderation. -->
 {% extends "base.html" %}
-{% block title %}Citáty k moderaci{% endblock %}
-{% block content %}<div class="container stack"><h1>Citáty k moderaci</h1>{% for quote in quotes %}<article class="card stack"><p>„{{ quote.text }}“</p><span class="muted">{{ quote.said_by }} · {{ quote.author.display_name }}</span><div class="row"><form method="post" action="/admin/quotes/{{ quote.id }}/approve"><button class="btn btn-primary">Schválit</button></form><form method="post" action="/admin/quotes/{{ quote.id }}/reject"><button class="btn btn-danger">Zamítnout</button></form></div></article>{% else %}<div class="empty-state">Žádné čekající citáty.</div>{% endfor %}</div>{% endblock %}
+{% block title %}Quotes k moderaci{% endblock %}
+{% block content %}<div class="container stack"><h1>Quotes k moderaci</h1>{% for quote in quotes %}<article class="card stack"><p>„{{ quote.text }}“</p><span class="muted">{{ quote.said_by }} · {{ quote.author.display_name }}</span><div class="row"><form method="post" action="/admin/quotes/{{ quote.id }}/approve"><button class="btn btn-primary">Approve</button></form><form method="post" action="/admin/quotes/{{ quote.id }}/reject"><button class="btn btn-danger">Reject</button></form></div></article>{% else %}<div class="empty-state">No pending quotes.</div>{% endfor %}</div>{% endblock %}

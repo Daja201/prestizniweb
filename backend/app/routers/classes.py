@@ -73,14 +73,14 @@ def create_class(
 ):
     name, description = name.strip(), description.strip()
     if not 2 <= len(name) <= 60:
-        return render(request, "classes/new.html", error="Název musí mít 2–60 znaků.", status_code=400)
+        return render(request, "classes/new.html", error="Name must be 2–60 characters.", status_code=400)
     if len(description) > 500:
-        return render(request, "classes/new.html", error="Popis může mít nejvýše 500 znaků.", status_code=400)
+        return render(request, "classes/new.html", error="Description may be at most 500 characters.", status_code=400)
     if _membership_count(db, user.id) >= 3:
-        return render(request, "classes/new.html", error="Můžeš být členem nejvýše 3 schválených tříd.", status_code=400)
+        return render(request, "classes/new.html", error="You can be a member of at most 3 approved classes.", status_code=400)
     slug = _unique_slug(db, _slugify(name))
     if not re.fullmatch(r"[a-z0-9-]{2,40}", slug):
-        return render(request, "classes/new.html", error="Z názvu nelze vytvořit platný profil třídy.", status_code=400)
+        return render(request, "classes/new.html", error="A valid class profile cannot be created from this name.", status_code=400)
     item = SchoolClass(name=name, slug=slug, description=description, created_by=user.id, status="pending")
     db.add(item)
     db.flush()
@@ -89,7 +89,7 @@ def create_class(
     response = request.app.state  # keep handler independent from response internals
     from fastapi.responses import RedirectResponse
     result = RedirectResponse(f"/c/{slug}", status_code=303)
-    flash(result, "Profil třídy byl odeslán ke schválení.", "success")
+    flash(result, "Class profile has been submitted for approval.", "success")
     return result
 
 
@@ -113,15 +113,15 @@ def class_detail(request: Request, slug: str, db: Session = Depends(get_db), use
 def join_class(request: Request, slug: str, db: Session = Depends(get_db), user: User = Depends(require_user)):
     item = db.scalar(select(SchoolClass).where(SchoolClass.slug == slug, SchoolClass.status == "active"))
     if not item:
-        return HTMLResponse("Třída nebyla nalezena.", status_code=404)
+        return HTMLResponse("Class not found.", status_code=404)
     if _membership_count(db, user.id) >= 3:
-        return HTMLResponse("Můžeš být členem nejvýše 3 schválených tříd.", status_code=400)
+        return HTMLResponse("You can be a member of at most 3 approved classes.", status_code=400)
     existing = db.get(ClassMember, (item.id, user.id))
     if existing:
-        return HTMLResponse("O členství už bylo požádáno.", status_code=409)
+        return HTMLResponse("Membership has already been requested.", status_code=409)
     db.add(ClassMember(class_id=item.id, user_id=user.id, role="member", status="pending"))
     db.commit()
-    return HTMLResponse("Žádost o členství byla odeslána.")
+    return HTMLResponse("Membership request has been sent.")
 
 
 def _can_manage(item: SchoolClass, actor: User) -> bool:
@@ -133,12 +133,12 @@ def approve_member(slug: str, user_id: int, db: Session = Depends(get_db), actor
     item = db.scalar(select(SchoolClass).where(SchoolClass.slug == slug))
     membership = db.get(ClassMember, (item.id, user_id)) if item else None
     if not item or not membership or not _can_manage(item, actor):
-        return HTMLResponse("Nemáš oprávnění.", status_code=403)
+        return HTMLResponse("You do not have permission.", status_code=403)
     if _membership_count(db, user_id) >= 3 and membership.status != "approved":
-        return HTMLResponse("Uživatel už má 3 schválená členství.", status_code=400)
+        return HTMLResponse("User already has 3 approved memberships.", status_code=400)
     membership.status = "approved"
     db.commit()
-    return HTMLResponse("Členství schváleno.")
+    return HTMLResponse("Membership approved.")
 
 
 @router.post("/c/{slug}/members/{user_id}/remove", response_class=HTMLResponse)
@@ -146,24 +146,24 @@ def remove_member(slug: str, user_id: int, db: Session = Depends(get_db), actor:
     item = db.scalar(select(SchoolClass).where(SchoolClass.slug == slug))
     membership = db.get(ClassMember, (item.id, user_id)) if item else None
     if not item or not membership:
-        return HTMLResponse("Členství nebylo nalezeno.", status_code=404)
+        return HTMLResponse("Membership not found.", status_code=404)
     if user_id != actor.id and not _can_manage(item, actor):
-        return HTMLResponse("Nemáš oprávnění.", status_code=403)
+        return HTMLResponse("You do not have permission.", status_code=403)
     if membership.role == "owner" and user_id == item.created_by:
-        return HTMLResponse("Vlastník nemůže sám sebe odebrat.", status_code=400)
+        return HTMLResponse("Owner cannot remove themselves.", status_code=400)
     db.delete(membership)
     db.commit()
-    return HTMLResponse("Členství odebráno.")
+    return HTMLResponse("Membership removed.")
 
 
 @router.post("/c/{slug}/edit", response_class=HTMLResponse)
 def edit_class(slug: str, description: str = Form(...), db: Session = Depends(get_db), actor: User = Depends(require_user)):
     item = db.scalar(select(SchoolClass).where(SchoolClass.slug == slug))
     if not item or item.created_by != actor.id:
-        return HTMLResponse("Nemáš oprávnění.", status_code=403)
+        return HTMLResponse("You do not have permission.", status_code=403)
     description = description.strip()
     if len(description) > 500:
-        return HTMLResponse("Popis může mít nejvýše 500 znaků.", status_code=400)
+        return HTMLResponse("Description may be at most 500 characters.", status_code=400)
     item.description = description
     db.commit()
-    return HTMLResponse("Popis byl uložen.")
+    return HTMLResponse("Description saved.")

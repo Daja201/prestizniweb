@@ -3,7 +3,7 @@
 {% block head_extra %}<link rel="stylesheet" href="/static/css/memes.css?v=meme-feed-layout-2">{% endblock %}
 {% block content %}
 <section class="stack meme-feed">
-  <header class="page-heading row"><h1>MEMES</h1><a class="btn btn-primary" href="/memes/new">ADD MEME</a></header>
+  <header class="page-heading row"><h1>Memes</h1><a class="btn btn-primary" href="/memes/new">ADD MEME</a></header>
   <form class="meme-filters row" method="get" action="/memes">
     <label class="form-field"><span>Tag</span><input class="input" name="tag" value="{{ tag }}" placeholder="tag"></label>
     <label class="form-field"><span>Order</span><select class="select" name="sort"><option value="new" {% if sort == 'new' %}selected{% endif %}>Newest</option><option value="popular" {% if sort == 'popular' %}selected{% endif %}>Most liked</option></select></label>

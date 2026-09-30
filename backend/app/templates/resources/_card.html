@@ -4,12 +4,12 @@
   <div class="row resource-card-header">
     <div class="pill">{{ resource.subject }}</div>
     <span class="badge">{{ kinds.get(resource.kind, resource.kind) }}</span>
-    {% if resource.school_year %}<span class="badge">{{ resource.school_year }}. ročník</span>{% endif %}
+    {% if resource.school_year %}<span class="badge">{{ resource.school_year }}. year</span>{% endif %}
     {% if resource.status == "hidden" %}<span class="badge badge-warn">skryto</span>{% endif %}
   </div>
   <h2 class="resource-title"><a href="/resources/{{ resource.id }}">{{ resource.title }}</a></h2>
   {% if resource.description %}<p>{{ resource.description }}</p>{% endif %}
-  {% if resource.school_class %}<p class="muted">Třída: {{ resource.school_class.name }}</p>{% endif %}
+  {% if resource.school_class %}<p class="muted">Class: {{ resource.school_class.name }}</p>{% endif %}
   <div class="row resource-tags">
     {% for item in resource.tags %}<a class="pill" href="/resources?tag={{ item.name | urlencode }}">#{{ item.name }}</a>{% endfor %}
   </div>

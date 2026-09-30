@@ -2,11 +2,11 @@
 {% extends "base.html" %}
 {% from "components/report_button.html" import report_button %}
 {% from "memes/_like_button.html" import like_button %}
-{% block title %}Meme | Spolužáci{% endblock %}
+{% block title %}Meme | Classmates{% endblock %}
 {% block head_extra %}<link rel="stylesheet" href="/static/css/memes.css?v=meme-feed-layout-2">{% endblock %}
 {% block content %}
 <article class="meme-detail stack">
-  <a class="btn btn-ghost back-link" href="/memes">← Zpět na memes</a>
+  <a class="btn btn-ghost back-link" href="/memes">← Back to memes</a>
   {% if meme.status == 'hidden' %}<span class="badge badge-warn">Skryto</span>{% endif %}
   <img class="meme-detail-image" src="{{ media_url(meme.image_path) }}" alt="{{ meme.caption or 'Meme' }}" width="{{ meme.width }}" height="{{ meme.height }}">
   <div class="row meme-detail-meta"><span>{{ meme.author.display_name }} · {{ meme.created_at|timeago }}</span>{{ like_button(meme, user, liked) }}</div>

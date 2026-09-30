@@ -2,7 +2,7 @@
 {% for quote in quotes %}
   {% include "quotes/_card.html" %}
 {% else %}
-  <div class="empty-state">Žádné citáty neodpovídají zadaným podmínkám.</div>
+  <div class="empty-state">No quotes match the given criteria.</div>
 {% endfor %}
 {% if next_url %}
   <div class="quote-sentinel" hx-get="{{ next_url }}" hx-trigger="revealed" hx-swap="outerHTML" aria-hidden="true"></div>

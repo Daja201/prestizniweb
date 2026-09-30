@@ -1,4 +1,4 @@
 <!-- Audit log listing. -->
 {% extends "base.html" %}
 {% block title %}Audit{% endblock %}
-{% block content %}<div class="container stack"><h1>Audit</h1>{% for entry in entries %}<article class="card"><strong>{{ entry.action }}</strong> · {{ entry.target_type or '' }} #{{ entry.target_id or '' }}<div class="muted">{{ entry.created_at }} · actor #{{ entry.actor_id or 'system' }}</div></article>{% else %}<div class="empty-state">Audit je prázdný.</div>{% endfor %}</div>{% endblock %}
+{% block content %}<div class="container stack"><h1>Audit</h1>{% for entry in entries %}<article class="card"><strong>{{ entry.action }}</strong> · {{ entry.target_type or '' }} #{{ entry.target_id or '' }}<div class="muted">{{ entry.created_at }} · actor #{{ entry.actor_id or 'system' }}</div></article>{% else %}<div class="empty-state">Audit is empty.</div>{% endfor %}</div>{% endblock %}

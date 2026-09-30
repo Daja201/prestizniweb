@@ -41,13 +41,13 @@ def takedown(
     name, contact, target_url, message = name.strip(), contact.strip(), target_url.strip(), message.strip()
     errors = []
     if not 1 <= len(name) <= 100:
-        errors.append("Jméno musí mít 1–100 znaků.")
+        errors.append("Name must be 1–100 characters.")
     if not 1 <= len(contact) <= 200:
-        errors.append("Kontakt musí mít 1–200 znaků.")
+        errors.append("Contact must be 1–200 characters.")
     if not 1 <= len(target_url) <= 500:
-        errors.append("URL musí mít 1–500 znaků.")
+        errors.append("URL must be 1–500 characters.")
     if not 1 <= len(message) <= 2000:
-        errors.append("Zpráva musí mít 1–2000 znaků.")
+        errors.append("Message must be 1–2000 characters.")
     if errors:
         return render(request, "legal/takedown.html", error=" ".join(errors), status_code=400)
     db.add(TakedownRequest(name=name, contact=contact, target_url=target_url, message=message))

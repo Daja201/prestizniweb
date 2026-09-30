@@ -1,26 +1,26 @@
-{# Stránka po odeslání přihlašovacího e-mailu – zobrazí formulář pro zadání kódu #}
+{# Page after sending the login email – shows the form for entering the code #}
 {% extends "base.html" %}
 {% block title %}Zkontroluj e-mail{% endblock %}
 
 {% block content %}
 <div class="container stack auth-page auth-page-wide">
   <h1>Zkontroluj e-mail</h1>
-  <p>Poslali jsme ti přihlašovací odkaz a 6místný kód. Odkaz je platný 15&nbsp;minut.</p>
+  <p>We sent you a login link and a 6-digit code. The link is valid for 15&nbsp;minutes.</p>
 
   {% if error %}
     <div class="flash flash-error" role="alert">{{ error }}</div>
   {% endif %}
 
   <div class="card stack">
-    <p><strong>Máš kód po ruce?</strong> Zadej ho sem:</p>
+    <p><strong>Have your code handy?</strong> Enter it here:</p>
     <form method="post" action="/auth/code">
       <input type="hidden" name="next" value="{{ next | default('/') }}">
       <div class="form-field">
-        <label for="email">Tvůj e-mail</label>
+        <label for="email">Your email</label>
         <input class="input" type="email" id="email" name="email" required autocomplete="email">
       </div>
       <div class="form-field">
-        <label for="code">Kód</label>
+        <label for="code">Code</label>
         <input
           class="input"
           type="text"
@@ -34,10 +34,10 @@
           placeholder="123456"
         >
       </div>
-      <button class="btn btn-primary" type="submit">Ověřit kód</button>
+      <button class="btn btn-primary" type="submit">Verify code</button>
     </form>
   </div>
 
-  <p class="muted">Odkaz jsi nedostal(a)? Zkontroluj spam nebo <a href="/login">požádej o nový</a>.</p>
+  <p class="muted">Didn't receive the link? Check spam or <a href="/login">request a new one</a>.</p>
 </div>
 {% endblock %}

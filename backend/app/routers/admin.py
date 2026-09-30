@@ -95,17 +95,17 @@ def resolve_report(
     actor: User = Depends(require_mod),
 ):
     if action not in {"hide", "restore", "delete", "dismiss", "ban_author"}:
-        return HTMLResponse("Neplatná akce.", status_code=400)
+        return HTMLResponse("Invalid action.", status_code=400)
     target = moderation.get_target(db, target_type, target_id)
     if not target:
-        return HTMLResponse("Cíl nebyl nalezen.", status_code=404)
+        return HTMLResponse("Target not found.", status_code=404)
     reports_for = _reports_for_target(db, target_type, target_id)
     if action == "ban_author":
         author = _author(db, target_type, target_id)
         if not author:
             return HTMLResponse("Autor nebyl nalezen.", status_code=404)
         if author.id == actor.id or author.role == "super_admin" or (author.role == "admin" and actor.role != "super_admin"):
-            return HTMLResponse("Nelze zablokovat sebe ani administrátora s vyššími pravomocemi.", status_code=403)
+            return HTMLResponse("Cannot block yourself or an administrator with higher privileges.", status_code=403)
         author.status = "banned"
         sessions = db.scalars(select(UserSession).where(UserSession.user_id == author.id)).all()
         for session in sessions:
@@ -122,7 +122,7 @@ def resolve_report(
             try:
                 moderation.set_status(db, target_type, target_id, status, actor.id, action)
             except (ValueError, LookupError) as exc:
-                return HTMLResponse(str(exc) or "Tuto akci nelze pro tento typ obsahu provést.", status_code=400)
+                return HTMLResponse(str(exc) or "This action cannot be performed for this content type.", status_code=400)
         audit.log(db, actor.id, f"report_{action}", target_type, target_id)
 
     for report in reports_for:
@@ -130,7 +130,7 @@ def resolve_report(
         report.handled_by = actor.id
         report.handled_at = datetime.now(timezone.utc)
     db.commit()
-    return HTMLResponse("Vyřešeno.")
+    return HTMLResponse("Resolved.")
 
 
 @router.get("/quotes", response_class=HTMLResponse)
@@ -143,7 +143,7 @@ def pending_quotes(request: Request, db: Session = Depends(get_db), actor: User 
 def approve_quote(quote_id: int, db: Session = Depends(get_db), actor: User = Depends(require_mod)):
     quote = db.get(Quote, quote_id)
     if not quote or quote.status != "pending":
-        return HTMLResponse("Citát nebyl nalezen.", status_code=404)
+        return HTMLResponse("Quote not found.", status_code=404)
     quote.status = "visible"
     audit.log(db, actor.id, "approve_quote", "quote", quote.id)
     db.commit()
@@ -154,7 +154,7 @@ def approve_quote(quote_id: int, db: Session = Depends(get_db), actor: User = De
 def reject_quote(quote_id: int, db: Session = Depends(get_db), actor: User = Depends(require_mod)):
     quote = db.get(Quote, quote_id)
     if not quote or quote.status != "pending":
-        return HTMLResponse("Citát nebyl nalezen.", status_code=404)
+        return HTMLResponse("Quote not found.", status_code=404)
     quote.status = "deleted"
     audit.log(db, actor.id, "reject_quote", "quote", quote.id)
     db.commit()
@@ -171,7 +171,7 @@ def pending_classes(request: Request, db: Session = Depends(get_db), actor: User
 def approve_class(class_id: int, db: Session = Depends(get_db), actor: User = Depends(require_admin)):
     item = db.get(SchoolClass, class_id)
     if not item:
-        return HTMLResponse("Třída nebyla nalezena.", status_code=404)
+        return HTMLResponse("Class not found.", status_code=404)
     item.status = "active"
     audit.log(db, actor.id, "approve_class", "class", class_id)
     db.commit()
@@ -182,7 +182,7 @@ def approve_class(class_id: int, db: Session = Depends(get_db), actor: User = De
 def hide_class(class_id: int, db: Session = Depends(get_db), actor: User = Depends(require_mod)):
     item = db.get(SchoolClass, class_id)
     if not item:
-        return HTMLResponse("Třída nebyla nalezena.", status_code=404)
+        return HTMLResponse("Class not found.", status_code=404)
     item.status = "hidden"
     audit.log(db, actor.id, "hide_class", "class", class_id)
     db.commit()
@@ -204,9 +204,9 @@ def users(request: Request, q: str = "", page: int = 1, db: Session = Depends(ge
 def ban_user(user_id: int, db: Session = Depends(get_db), actor: User = Depends(require_mod)):
     target = db.get(User, user_id)
     if not target:
-        return HTMLResponse("Uživatel nebyl nalezen.", status_code=404)
+        return HTMLResponse("User not found.", status_code=404)
     if target.id == actor.id or target.role == "super_admin" or (target.role == "admin" and actor.role != "super_admin"):
-        return HTMLResponse("Tuto akci nelze provést.", status_code=403)
+        return HTMLResponse("This action cannot be performed.", status_code=403)
     target.status = "banned"
     for session in db.scalars(select(UserSession).where(UserSession.user_id == target.id)).all():
         db.delete(session)
@@ -219,7 +219,7 @@ def ban_user(user_id: int, db: Session = Depends(get_db), actor: User = Depends(
 def unban_user(user_id: int, db: Session = Depends(get_db), actor: User = Depends(require_mod)):
     target = db.get(User, user_id)
     if not target:
-        return HTMLResponse("Uživatel nebyl nalezen.", status_code=404)
+        return HTMLResponse("User not found.", status_code=404)
     target.status = "active"
     audit.log(db, actor.id, "unban_user", "user", target.id)
     db.commit()
@@ -229,18 +229,18 @@ def unban_user(user_id: int, db: Session = Depends(get_db), actor: User = Depend
 @router.post("/users/{user_id}/role")
 def change_role(user_id: int, role: str = Form(...), db: Session = Depends(get_db), actor: User = Depends(require_super_admin)):
     if role not in {"user", "admin", "super_admin"}:
-        return HTMLResponse("Neplatná role.", status_code=400)
+        return HTMLResponse("Invalid role.", status_code=400)
     target = db.get(User, user_id)
     if not target:
-        return HTMLResponse("Uživatel nebyl nalezen.", status_code=404)
+        return HTMLResponse("User not found.", status_code=404)
     if target.role == "super_admin" and role != "super_admin":
         super_admins = int(db.scalar(select(func.count()).select_from(User).where(User.role == "super_admin", User.status != "deleted")) or 0)
         if super_admins <= 1:
-            return HTMLResponse("Posledního superadmina nelze odebrat.", status_code=409)
+            return HTMLResponse("Cannot remove the last super admin.", status_code=409)
     if target.role in {"admin", "super_admin"} and role == "user":
         admins = int(db.scalar(select(func.count()).select_from(User).where(User.role.in_(["admin", "super_admin"]), User.status != "deleted")) or 0)
         if admins <= 1:
-            return HTMLResponse("Posledního administrátora nelze demotovat.", status_code=409)
+            return HTMLResponse("Cannot demote the last administrator.", status_code=409)
         if target.avatar == "square":
             target.avatar = "circle"
     target.role = role
@@ -266,7 +266,7 @@ def takedowns(request: Request, db: Session = Depends(get_db), actor: User = Dep
 def done_takedown(request_id: int, db: Session = Depends(get_db), actor: User = Depends(require_mod)):
     item = db.get(TakedownRequest, request_id)
     if not item:
-        return HTMLResponse("Požadavek nebyl nalezen.", status_code=404)
+        return HTMLResponse("Request not found.", status_code=404)
     item.status = "done"
     item.handled_by = actor.id
     audit.log(db, actor.id, "takedown_done", "takedown", item.id)

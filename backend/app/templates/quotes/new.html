@@ -1,39 +1,39 @@
 {# Provides the quote submission form and its moderation reminder. #}
 {% extends "base.html" %}
-{% block title %}Přidat citát{% endblock %}
+{% block title %}Add quote{% endblock %}
 {% block content %}
 <div class="container stack narrow-page">
   <div>
-    <h1>Přidat citát</h1>
-    <p class="muted">Připomeň si pravidla: bez urážek, osobních údajů a obsahu o zdraví či soukromém životě. Učitelé i studenti mohou požádat o odstranění.</p>
+    <h1>Add quote</h1>
+    <p class="muted">Remember the rules: no insults, personal data or health/private life content. Teachers and students may request removal.</p>
     <p><a href="/rules">Zobrazit pravidla</a></p>
   </div>
 
   <form class="card stack" method="post" action="/quotes">
     <div class="form-field">
-      <label for="quote-text">Citát</label>
+      <label for="quote-text">Quote</label>
       <textarea class="textarea" id="quote-text" name="text" maxlength="400" minlength="2" required>{{ form.get('text', '') }}</textarea>
       {% if errors.get('text') %}<div class="form-error">{{ errors['text'] }}</div>{% endif %}
     </div>
     <div class="form-field">
-      <label for="quote-said-by">Kdo to řekl</label>
+      <label for="quote-said-by">Who said it</label>
       <input class="input" id="quote-said-by" name="said_by" value="{{ form.get('said_by', '') }}" maxlength="80" required>
       {% if errors.get('said_by') %}<div class="form-error">{{ errors['said_by'] }}</div>{% endif %}
     </div>
     <div class="form-field">
-      <label for="quote-context">Kontext <span class="muted">(volitelné)</span></label>
+      <label for="quote-context">Context <span class="muted">(optional)</span></label>
       <textarea class="textarea" id="quote-context" name="context" maxlength="200">{{ form.get('context', '') }}</textarea>
       {% if errors.get('context') %}<div class="form-error">{{ errors['context'] }}</div>{% endif %}
     </div>
     <div class="form-field">
-      <label for="quote-date">Datum výroku <span class="muted">(volitelné)</span></label>
+      <label for="quote-date">Date of quote <span class="muted">(optional)</span></label>
       <input class="input" id="quote-date" type="date" name="said_on" value="{{ form.get('said_on', '') }}" max="{{ today.isoformat() }}">
       {% if errors.get('said_on') %}<div class="form-error">{{ errors['said_on'] }}</div>{% endif %}
     </div>
     <div class="form-field">
-      <label for="quote-class-new">Třída <span class="muted">(volitelné)</span></label>
+      <label for="quote-class-new">Class <span class="muted">(optional)</span></label>
       <select class="select" id="quote-class-new" name="class_id">
-        <option value="">Bez přiřazení</option>
+        <option value="">No assignment</option>
         {% for item in classes %}
           <option value="{{ item.id }}"{% if form.get('class_id') == item.id|string %} selected{% endif %}>{{ item.name }}</option>
         {% endfor %}
@@ -41,8 +41,8 @@
       {% if errors.get('class_id') %}<div class="form-error">{{ errors['class_id'] }}</div>{% endif %}
     </div>
     <div class="row">
-      <button class="btn btn-primary" type="submit">Odeslat citát</button>
-      <a class="btn btn-ghost" href="/quotes">Zpět</a>
+      <button class="btn btn-primary" type="submit">Submit quote</button>
+      <a class="btn btn-ghost" href="/quotes">Back</a>
     </div>
   </form>
 </div>

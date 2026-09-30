@@ -1,17 +1,17 @@
 <!-- Meme upload form. -->
 {% extends "base.html" %}
-{% block title %}Přidat meme | Spolužáci{% endblock %}
+{% block title %}Add meme | Classmates{% endblock %}
 {% block head_extra %}<link rel="stylesheet" href="/static/css/memes.css">{% endblock %}
 {% block content %}
 <section class="form-page stack">
-  <header><p class="eyebrow">Přidat obsah</p><h1>Nové meme</h1></header>
+  <header><p class="eyebrow">Add content</p><h1>New meme</h1></header>
   {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
   <form class="stack" action="/memes" method="post" enctype="multipart/form-data">
-    <label class="form-field"><span>Obrázek</span><input class="input" type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" required></label>
-    <label class="form-field"><span>Popisek</span><textarea class="textarea" name="caption" maxlength="300">{{ form.caption|default('') }}</textarea></label>
-    <label class="form-field"><span>Štítky</span><input class="input" name="tags" maxlength="160" value="{{ form.tags|default('') }}"><span class="muted">Nejvýše 5 štítků, oddělených mezerou nebo čárkou.</span></label>
-    {% if classes %}<label class="form-field"><span>Třída</span><select class="select" name="class_id"><option value="">Bez třídy</option>{% for school_class in classes %}<option value="{{ school_class.id }}" {% if form.class_id|string == school_class.id|string %}selected{% endif %}>{{ school_class.name }}</option>{% endfor %}</select></label>{% endif %}
-    <div class="row"><a class="btn btn-ghost" href="/memes">Zrušit</a><button class="btn btn-primary" type="submit">Nahrát meme</button></div>
+    <label class="form-field"><span>Image</span><input class="input" type="file" name="image" accept="image/jpeg,image/png,image/webp,image/gif" required></label>
+    <label class="form-field"><span>Descriptionek</span><textarea class="textarea" name="caption" maxlength="300">{{ form.caption|default('') }}</textarea></label>
+    <label class="form-field"><span>Tags</span><input class="input" name="tags" maxlength="160" value="{{ form.tags|default('') }}"><span class="muted">Up to 5 tags, separated by space or comma.</span></label>
+    {% if classes %}<label class="form-field"><span>Class</span><select class="select" name="class_id"><option value="">No class</option>{% for school_class in classes %}<option value="{{ school_class.id }}" {% if form.class_id|string == school_class.id|string %}selected{% endif %}>{{ school_class.name }}</option>{% endfor %}</select></label>{% endif %}
+    <div class="row"><a class="btn btn-ghost" href="/memes">Cancel</a><button class="btn btn-primary" type="submit">Upload meme</button></div>
   </form>
 </section>
 {% endblock %}

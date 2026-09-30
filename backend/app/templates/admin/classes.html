@@ -1,4 +1,4 @@
 <!-- Pending and hidden class moderation. -->
 {% extends "base.html" %}
-{% block title %}Třídy k moderaci{% endblock %}
-{% block content %}<div class="container stack"><h1>Třídy k moderaci</h1>{% for item in classes %}<article class="card stack"><h2>{{ item.name }}</h2><p>{{ item.description }}</p><span class="badge">{{ item.status }}</span><div class="row"><form method="post" action="/admin/classes/{{ item.id }}/approve"><button class="btn btn-primary">Schválit</button></form><form method="post" action="/admin/classes/{{ item.id }}/hide"><button class="btn btn-danger">Skrýt</button></form></div></article>{% else %}<div class="empty-state">Žádné třídy k moderaci.</div>{% endfor %}</div>{% endblock %}
+{% block title %}Classes k moderaci{% endblock %}
+{% block content %}<div class="container stack"><h1>Classes k moderaci</h1>{% for item in classes %}<article class="card stack"><h2>{{ item.name }}</h2><p>{{ item.description }}</p><span class="badge">{{ item.status }}</span><div class="row"><form method="post" action="/admin/classes/{{ item.id }}/approve"><button class="btn btn-primary">Approve</button></form><form method="post" action="/admin/classes/{{ item.id }}/hide"><button class="btn btn-danger">Hide</button></form></div></article>{% else %}<div class="empty-state">No classes for moderation.</div>{% endfor %}</div>{% endblock %}

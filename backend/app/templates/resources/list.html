@@ -1,65 +1,65 @@
 {# Provides the study-resource catalogue, filters, search, and pagination. #}
 {% extends "base.html" %}
-{% block title %}Studijní materiály{% endblock %}
+{% block title %}Study materials{% endblock %}
 {% block head_extra %}<link rel="stylesheet" href="/static/css/resources.css">{% endblock %}
 {% block content %}
 <div class="container stack resources-page">
   <div class="row page-header">
     <div>
-      <h1>Studijní materiály</h1>
+      <h1>Study materials</h1>
       <p class="muted"></p>
     </div>
-    <a class="btn btn-primary" href="/resources/new">Přidat materiál</a>
+    <a class="btn btn-primary" href="/resources/new">Add material</a>
   </div>
 
   <form class="card stack resource-filters" method="get" action="/resources">
     <div class="grid resource-filter-grid">
       <div class="form-field">
-        <label for="resource-q">Hledat</label>
-        <input class="input" id="resource-q" name="q" value="{{ q }}" placeholder="Název nebo popis">
+        <label for="resource-q">Search</label>
+        <input class="input" id="resource-q" name="q" value="{{ q }}" placeholder="Name nebo popis">
       </div>
       <div class="form-field">
-        <label for="resource-subject">Předmět</label>
+        <label for="resource-subject">Subject</label>
         <select class="select" id="resource-subject" name="subject">
-          <option value="">Všechny předměty</option>
+          <option value="">All subjects</option>
           {% for item in subjects %}<option value="{{ item }}"{% if subject == item %} selected{% endif %}>{{ item }}</option>{% endfor %}
         </select>
       </div>
       <div class="form-field">
-        <label for="resource-year">Ročník</label>
+        <label for="resource-year">Year</label>
         <select class="select" id="resource-year" name="year">
-          <option value="">Všechny</option>
-          {% for item in [1, 2, 3, 4] %}<option value="{{ item }}"{% if year == item %} selected{% endif %}>{{ item }}. ročník</option>{% endfor %}
+          <option value="">All</option>
+          {% for item in [1, 2, 3, 4] %}<option value="{{ item }}"{% if year == item %} selected{% endif %}>{{ item }}. year</option>{% endfor %}
         </select>
       </div>
       <div class="form-field">
         <label for="resource-kind">Typ</label>
         <select class="select" id="resource-kind" name="kind">
-          <option value="">Všechny typy</option>
+          <option value="">All typy</option>
           {% for key, label in kinds.items() %}<option value="{{ key }}"{% if kind == key %} selected{% endif %}>{{ label }}</option>{% endfor %}
         </select>
       </div>
       <div class="form-field">
-        <label for="resource-class">Třída</label>
+        <label for="resource-class">Class</label>
         <select class="select" id="resource-class" name="class">
-          <option value="">Všechny třídy</option>
+          <option value="">All classes</option>
           {% for item in classes %}<option value="{{ item.slug }}"{% if class_slug == item.slug %} selected{% endif %}>{{ item.name }}</option>{% endfor %}
         </select>
       </div>
       <div class="form-field">
-        <label for="resource-tag">Štítek</label>
+        <label for="resource-tag">Tag</label>
         <select class="select" id="resource-tag" name="tag">
-          <option value="">Všechny štítky</option>
+          <option value="">All tags</option>
           {% for item in available_tags %}<option value="{{ item.name }}"{% if tag == item.name %} selected{% endif %}>#{{ item.name }}</option>{% endfor %}
         </select>
       </div>
     </div>
     <div class="row">
       <div class="form-field compact-field">
-        <label for="resource-sort">Řazení</label>
+        <label for="resource-sort">Sort</label>
         <select class="select" id="resource-sort" name="sort">
-          <option value="new"{% if sort == 'new' %} selected{% endif %}>Nejnovější</option>
-          <option value="top"{% if sort == 'top' %} selected{% endif %}>Nejlépe hodnocené</option>
+          <option value="new"{% if sort == 'new' %} selected{% endif %}>Newest</option>
+          <option value="top"{% if sort == 'top' %} selected{% endif %}>Top rated</option>
         </select>
       </div>
       <button class="btn btn-primary" type="submit">Filtrovat</button>
@@ -67,13 +67,13 @@
     </div>
   </form>
 
-  <div class="muted">{{ total }} materiálů</div>
+  <div class="muted">{{ total }} materials</div>
   <div id="resource-results" class="stack">
     {% include "resources/_items.html" %}
   </div>
 
   {% if page > 1 and resources %}
-    <nav class="row pagination" aria-label="Stránkování">
+    <nav class="row pagination" aria-label="Pagination">
       {% set previous_url = "/resources?page=" ~ (page - 1) %}
       {% if subject %}{% set previous_url = previous_url ~ "&subject=" ~ (subject | urlencode) %}{% endif %}
       {% if year %}{% set previous_url = previous_url ~ "&year=" ~ year %}{% endif %}
@@ -82,9 +82,9 @@
       {% if tag %}{% set previous_url = previous_url ~ "&tag=" ~ (tag | urlencode) %}{% endif %}
       {% if q %}{% set previous_url = previous_url ~ "&q=" ~ (q | urlencode) %}{% endif %}
       {% if sort != "new" %}{% set previous_url = previous_url ~ "&sort=" ~ (sort | urlencode) %}{% endif %}
-      <a class="btn btn-ghost" href="{{ previous_url }}">Předchozí</a>
+      <a class="btn btn-ghost" href="{{ previous_url }}">Previous</a>
       <span class="muted">Strana {{ page }}</span>
-      {% if next_url %}<a class="btn btn-ghost" href="{{ next_url }}">Další</a>{% endif %}
+      {% if next_url %}<a class="btn btn-ghost" href="{{ next_url }}">Next</a>{% endif %}
     </nav>
   {% endif %}
 </div>
