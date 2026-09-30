@@ -1,4 +1,4 @@
-# Email sending for login magic links and codes.
+# Minimal passwordless-login email sender.
 from __future__ import annotations
 
 import logging
@@ -12,50 +12,29 @@ logger = logging.getLogger(__name__)
 
 
 def send_login_email(to: str, link: str, code: str) -> None:
-    """Send a passwordless login email with a magic link and 6-digit code."""
+    """Send a minimal login email with one action button and the fallback code."""
     if not settings.smtp_host:
         if settings.env == "dev":
             logger.info("DEV – login link: %s  code: %s", link, code)
         return
 
-    subject = "Přihlášení do komunity SPŠE Ostrava"
+    subject = "Login"
+    text_body = f"""Login
 
-    text_body = f"""\
-Přihlášení do komunity SPŠE Ostrava
-=====================================
+Open this link to continue:
+{link}
 
-Klikni na odkaz níže nebo zadej kód {code} na stránce ověření.
+Code: {code}
 
-Odkaz: {link}
-
-Kód: {code}
-
-Odkaz vyprší za 15 minut a lze jej použít pouze jednou.
-Pokud ses o přihlášení nepokusil(a), tento email ignoruj.
+The link expires in 15 minutes.
 """
-
-    html_body = f"""\
-<!DOCTYPE html>
-<html lang="cs">
-<head><meta charset="utf-8"></head>
-<body style="font-family:sans-serif;max-width:480px;margin:auto">
-  <h2>Přihlášení do komunity SPŠE&nbsp;Ostrava</h2>
-  <p>Klikni na tlačítko nebo zadej kód na stránce ověření.</p>
-  <p>
-    <a href="{link}"
-       style="display:inline-block;padding:10px 20px;background:#2563eb;
-              color:#fff;text-decoration:none;border-radius:6px">
-      Přihlásit se
-    </a>
-  </p>
-  <p>Nebo zadej kód: <strong style="font-size:1.4em;letter-spacing:.15em">{code}</strong></p>
-  <p style="color:#555;font-size:.85em">
-    Odkaz vyprší za 15&nbsp;minut a lze jej použít pouze jednou.<br>
-    Pokud ses o přihlášení nepokusil(a), tento email ignoruj.
-  </p>
-</body>
-</html>
-"""
+    html_body = f"""<!doctype html>
+<html lang="en"><body>
+<p>Login</p>
+<p><a href="{link}" style="display:inline-block;padding:10px 14px;background:#f97316;color:#fff;text-decoration:none">Continue</a></p>
+<p>Code: <strong>{code}</strong></p>
+<p>The link expires in 15 minutes.</p>
+</body></html>"""
 
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject

@@ -1,23 +1,23 @@
-<!-- Shared page shell, navigation, flash messages, and local scripts. -->
 <!doctype html>
 <html lang="cs">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="htmx-config" content='{"includeIndicatorStyles":false,"allowEval":false}'>
-  <title>{% block title %}Spolužáci{% endblock %}</title>
+  <title>{% block title %}Prestižní Web no spolužáci{% endblock %}</title>
+  <script>try{const t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t;}catch(e){}</script>
   <link rel="stylesheet" href="/static/css/app.css">
   {% block head_extra %}{% endblock %}
   <script src="/static/vendor/htmx.min.js" defer></script>
   <script src="/static/js/app.js" defer></script>
 </head>
 <body>
-  {% include "components/nav.html" %}
+  {% if request.url.path != "/login" %}{% include "components/nav.html" %}{% endif %}
   {% include "components/flash.html" %}
   <main id="main" class="container">
     {% block content %}{% endblock %}
   </main>
-  {% include "components/footer.html" %}
+  {% if request.url.path != "/login" %}{% include "components/footer.html" %}{% endif %}
   {% block scripts %}{% endblock %}
 </body>
 </html>

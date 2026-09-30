@@ -1,26 +1,22 @@
-/* Layout and controls for meme browsing and upload views. */
-.meme-feed { padding-block: 2rem; }
+.meme-feed { width: min(100%, 48rem); margin-inline: auto; padding-block: 2rem; }
 .meme-filters { justify-content: flex-start; align-items: end; flex-wrap: wrap; }
 .meme-filters .form-field { width: min(100%, 16rem); }
-.meme-grid { display: grid; grid-template-columns: 1fr; align-items: start; gap: 1rem; }
-.meme-grid[data-masonry-ready="true"] { display: flex; }
-.masonry-column { display: flex; min-width: 0; flex: 1 1 0; flex-direction: column; gap: 1rem; }
-.meme-card { display: flex; flex-direction: column; gap: 0.65rem; padding: 0.65rem; overflow-wrap: anywhere; }
-.meme-image-link { display: block; overflow: hidden; border-radius: 4px; background: #dce7e0; }
-.meme-image { display: block; width: 100%; height: auto; }
+.meme-grid { position: relative; display: grid; min-height: min(72vh, 50rem); place-items: center; }
+.meme-card { display: none; width: min(100%, 44rem); flex-direction: column; gap: .65rem; padding: .65rem; border: 1px solid var(--border); overflow-wrap: anywhere; }
+.meme-card.is-active { display: flex; }
+.meme-image-link { display: block; overflow: hidden; border: 1px solid var(--border); background: var(--bg); }
+.meme-image { display: block; width: 100%; max-height: 68vh; object-fit: contain; }
 .meme-caption { margin: 0; white-space: pre-wrap; }
-.meme-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.meme-card-footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
 .like-form { display: inline-flex; margin: 0; }
-.like-button { min-height: 2.1rem; padding: 0.25rem 0.5rem; }
-.like-button.is-liked { color: #bd4051; }
-.meme-sentinel { min-height: 1px; flex: 0 0 1px; }
-.meme-hidden { border-color: #e6c179; }
+.like-button { min-height: 2.1rem; padding: .25rem .5rem; }
+.like-button.is-liked { color: var(--accent); }
+.meme-sentinel { display: none; }
+.meme-hidden { border-color: var(--accent); }
 .meme-detail { width: min(100%, 54rem); margin: 2rem auto; }
-.meme-detail-image { display: block; max-height: 78vh; width: auto; max-width: 100%; margin-inline: auto; object-fit: contain; border-radius: var(--radius); background: #dce7e0; }
+.meme-detail-image { display: block; max-height: 78vh; width: auto; max-width: 100%; margin-inline: auto; object-fit: contain; border: 1px solid var(--border); background: var(--bg); }
 .meme-detail-meta, .meme-tags, .meme-controls { justify-content: flex-start; flex-wrap: wrap; }
 .meme-controls { justify-content: space-between; }
 .meme-tags .pill { text-decoration: none; }
+.meme-pager { justify-content: center; }
 .form-page { width: min(100%, 42rem); margin: 2rem auto; }
-@media (prefers-color-scheme: dark) {
-  .meme-image-link, .meme-detail-image { background: #243d38; }
-}

@@ -1,14 +1,21 @@
-<!-- Primary site navigation. -->
 <nav class="site-nav" aria-label="Hlavní navigace">
   <div class="container nav-inner">
-    <a class="brand" href="/">spolužáci<span>.</span></a>
+    <a class="brand" href="/">PRESTIŽNÍ WEB<span>.</span></a>
     {% if user %}
     <div class="nav-links">
-      <a href="/memes">Memes</a><a href="/quotes">Citáty</a><a href="/resources">Materiály</a><a href="/classes">Třídy</a>
-      {% if user.role in ['moderator', 'admin'] %}<a href="/admin">Správa</a>{% endif %}
-      <a href="/me">{{ user.display_name }}</a>
-      <form method="post" action="/logout"><button class="btn btn-ghost" type="submit">Odhlásit</button></form>
+      <a class="btn btn-ghost" href="/memes">MEMES</a>
+      <a class="btn btn-ghost" href="/quotes">QUOTES</a>
+      <a class="btn btn-ghost" href="/resources">MATERIALS</a>
+      <a class="btn btn-ghost" href="/classes">CLASS WEBS</a>
+      {% if user.role == 'admin' %}<a class="btn btn-ghost" href="/admin">ADMIN</a>{% endif %}
+      <a class="btn btn-ghost nav-user" href="/me" aria-label="Settings">
+        <span class="avatar avatar-{{ user.avatar or 'circle' }}" aria-hidden="true">{% if user.avatar not in ['dot', 'triangle'] %}{{ user.display_name[:1]|upper }}{% endif %}</span>
+      </a>
+      <form method="post" action="/logout"><button class="btn btn-ghost" type="submit">LOGOUT</button></form>
+      <button class="btn btn-ghost" type="button" data-theme-toggle>BLACK</button>
     </div>
-    {% else %}<a class="btn btn-ghost" href="/login">Přihlásit</a>{% endif %}
+    {% else %}
+      <a class="btn btn-primary" href="/login">LOGIN</a>
+    {% endif %}
   </div>
 </nav>

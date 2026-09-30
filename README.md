@@ -1,7 +1,7 @@
 <!-- Project setup, deployment, backup, and upgrade instructions. -->
 # Spolužáci
 
-Private, unofficial community site for SPŠE Ostrava students. The application is server-rendered with FastAPI/Jinja and PostgreSQL; Caddy provides TLS and gates uploaded media behind login.
+Private, unofficial community site for the community site students. The application is server-rendered with FastAPI/Jinja and PostgreSQL; Caddy provides TLS and gates uploaded media behind login.
 
 ## Local development
 

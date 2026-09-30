@@ -12,7 +12,7 @@ You are one of FIVE AI developers building ONE project in parallel. Everyone rec
 
 ## 1. Product
 
-Unofficial, private community site for students of SPŠE Ostrava (Czech secondary school, domain spseiostrava.cz).
+Unofficial, private community site for students of the community site (Czech secondary school, domain spseiostrava.cz).
 Only `@spseiostrava.cz` emails may log in. Everything except `/` (landing), `/login`, `/auth/*`, `/rules`, `/privacy`, `/takedown`, `/static/*`, `/healthz` requires login.
 Features: memes feed (Pinterest-like masonry, infinite scroll), quotes ("citáty" - funny things students/teachers said), study resources, class profiles, and reporting + moderation on everything.
 UI language: CZECH (all user-visible text, dates in cs-CZ format). Code, comments, identifiers: English.

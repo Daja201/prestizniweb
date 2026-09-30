@@ -435,6 +435,7 @@ def me_post(request: Request, db: Session = Depends(get_db), user: User = Depend
         loop.close()
 
     display_name = str(form.get("display_name", "")).strip()
+    avatar = str(form.get("avatar", "circle")).strip().lower()
 
     # Validate: 2-60 chars, no control characters
     if not (2 <= len(display_name) <= 60):
@@ -442,10 +443,14 @@ def me_post(request: Request, db: Session = Depends(get_db), user: User = Depend
     if any(unicodedata.category(c).startswith("C") for c in display_name):
         return render(request, "auth/me.html", error="Jméno obsahuje nepovoluné znaky.")
 
+    if avatar not in {"circle", "square", "triangle", "dot"}:
+        return render(request, "auth/me.html", error="Neplatný profilový symbol.")
+
     user.display_name = display_name
+    user.avatar = avatar
     db.commit()
     response = RedirectResponse("/me", status_code=303)
-    flash(response, "Jméno bylo uloženo.", "success")
+    flash(response, "Settings saved.", "success")
     return response
 
 
